@@ -1,0 +1,11 @@
+{
+  "name": "CARLA circular-signal RGB MLP",
+  "architecture": "RGB32x32-ReLU96-4class",
+  "classes": ["Red", "Yellow", "Green", "Unknown"],
+  "sha256": "b46046d3b11e74d3390fa34de04d5dbd3377714356952b1c9e40f062cd44b712",
+  "training": "2889 CARLA crops + 813 public Autoware tutorial train crops",
+  "selection": "CARLA intersection 961",
+  "held_out": "CARLA intersection 949; public tutorial val split",
+  "deployment_scope": "Tested Town10HD_Opt circular signals only; real roads unqualified",
+  "limitations": ["Arrow semantics unqualified", "Night/rain unqualified", "Two distinct heads required for Green", "Requires surveyed static head geometry and calibrated localization"]
+}

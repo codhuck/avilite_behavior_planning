@@ -1,0 +1,6 @@
+# AVLite installs this file with the cloned plugin as its working directory.
+# Installs the independent perception package and its Python dependencies.
+-e .
+numpy>=1.23,<3
+opencv-python-headless==4.11.0.86
+PyYAML>=6

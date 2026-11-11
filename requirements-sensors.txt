@@ -1,0 +1,2 @@
+# Optional RGB/LiDAR perception runtime. AVLite core already requires NumPy/Shapely.
+opencv-python-headless==4.11.0.86

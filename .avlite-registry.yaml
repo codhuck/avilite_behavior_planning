@@ -1,0 +1,4 @@
+name: avlite-behavior-hdmap
+display_name: AVLite HD Map Behavior Planner
+min_avlite_version: 0.6.6
+dependency_notes: Use an OpenDRIVE .xodr map and LocalPlanningPipeline.
