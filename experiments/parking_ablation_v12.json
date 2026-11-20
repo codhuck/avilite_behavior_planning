@@ -1,0 +1,905 @@
+[
+  {
+    "id": "paired_0_no_observation",
+    "mode": "perpendicular_forward",
+    "seed": 5310,
+    "rotation_degrees": -5,
+    "translation": [
+      1.5,
+      1
+    ],
+    "start_delta": [
+      0.1,
+      -0.1,
+      -0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        0.2
+      ],
+      [
+        0,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      46.465339666248695,
+      4.5171005832034385
+    ],
+    "pedestrian_direction": [
+      0.005355591349986866,
+      -0.9999856587178098
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "no_observation",
+    "pair_id": "geometry_0_seed_5310"
+  },
+  {
+    "id": "paired_0_full",
+    "mode": "perpendicular_forward",
+    "seed": 5310,
+    "rotation_degrees": -5,
+    "translation": [
+      1.5,
+      1
+    ],
+    "start_delta": [
+      0.1,
+      -0.1,
+      -0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        0.2
+      ],
+      [
+        0,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      46.465339666248695,
+      4.5171005832034385
+    ],
+    "pedestrian_direction": [
+      0.005355591349986866,
+      -0.9999856587178098
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "full",
+    "pair_id": "geometry_0_seed_5310"
+  },
+  {
+    "id": "paired_0_roof_only",
+    "mode": "perpendicular_forward",
+    "seed": 5310,
+    "rotation_degrees": -5,
+    "translation": [
+      1.5,
+      1
+    ],
+    "start_delta": [
+      0.1,
+      -0.1,
+      -0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        0.2
+      ],
+      [
+        0,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      46.465339666248695,
+      4.5171005832034385
+    ],
+    "pedestrian_direction": [
+      0.005355591349986866,
+      -0.9999856587178098
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "roof_only",
+    "pair_id": "geometry_0_seed_5310"
+  },
+  {
+    "id": "paired_0_uniform_two",
+    "mode": "perpendicular_forward",
+    "seed": 5310,
+    "rotation_degrees": -5,
+    "translation": [
+      1.5,
+      1
+    ],
+    "start_delta": [
+      0.1,
+      -0.1,
+      -0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        0.2
+      ],
+      [
+        0,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      46.465339666248695,
+      4.5171005832034385
+    ],
+    "pedestrian_direction": [
+      0.005355591349986866,
+      -0.9999856587178098
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "uniform_two",
+    "pair_id": "geometry_0_seed_5310"
+  },
+  {
+    "id": "paired_0_full_segment",
+    "mode": "perpendicular_forward",
+    "seed": 5310,
+    "rotation_degrees": -5,
+    "translation": [
+      1.5,
+      1
+    ],
+    "start_delta": [
+      0.1,
+      -0.1,
+      -0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        0.2
+      ],
+      [
+        0,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      46.465339666248695,
+      4.5171005832034385
+    ],
+    "pedestrian_direction": [
+      0.005355591349986866,
+      -0.9999856587178098
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "full_segment",
+    "pair_id": "geometry_0_seed_5310"
+  },
+  {
+    "id": "paired_0_no_speed_search",
+    "mode": "perpendicular_forward",
+    "seed": 5310,
+    "rotation_degrees": -5,
+    "translation": [
+      1.5,
+      1
+    ],
+    "start_delta": [
+      0.1,
+      -0.1,
+      -0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        0.2
+      ],
+      [
+        0,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      46.465339666248695,
+      4.5171005832034385
+    ],
+    "pedestrian_direction": [
+      0.005355591349986866,
+      -0.9999856587178098
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "no_speed_search",
+    "pair_id": "geometry_0_seed_5310"
+  },
+  {
+    "id": "paired_0_uniform_one",
+    "mode": "perpendicular_forward",
+    "seed": 5310,
+    "rotation_degrees": -5,
+    "translation": [
+      1.5,
+      1
+    ],
+    "start_delta": [
+      0.1,
+      -0.1,
+      -0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        0.2
+      ],
+      [
+        0,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      46.465339666248695,
+      4.5171005832034385
+    ],
+    "pedestrian_direction": [
+      0.005355591349986866,
+      -0.9999856587178098
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "uniform_one",
+    "pair_id": "geometry_0_seed_5310"
+  },
+  {
+    "id": "paired_1_full_segment",
+    "mode": "perpendicular_reverse",
+    "seed": 5311,
+    "rotation_degrees": 6,
+    "translation": [
+      -2,
+      1.5
+    ],
+    "start_delta": [
+      -0.1,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        -0.15
+      ],
+      [
+        0,
+        0.2
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      43.521155552571265,
+      4.502507710758382
+    ],
+    "pedestrian_direction": [
+      0.45238687615132844,
+      -0.8918217951396135
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "full_segment",
+    "pair_id": "geometry_1_seed_5311"
+  },
+  {
+    "id": "paired_1_uniform_two",
+    "mode": "perpendicular_reverse",
+    "seed": 5311,
+    "rotation_degrees": 6,
+    "translation": [
+      -2,
+      1.5
+    ],
+    "start_delta": [
+      -0.1,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        -0.15
+      ],
+      [
+        0,
+        0.2
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      43.521155552571265,
+      4.502507710758382
+    ],
+    "pedestrian_direction": [
+      0.45238687615132844,
+      -0.8918217951396135
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "uniform_two",
+    "pair_id": "geometry_1_seed_5311"
+  },
+  {
+    "id": "paired_1_full",
+    "mode": "perpendicular_reverse",
+    "seed": 5311,
+    "rotation_degrees": 6,
+    "translation": [
+      -2,
+      1.5
+    ],
+    "start_delta": [
+      -0.1,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        -0.15
+      ],
+      [
+        0,
+        0.2
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      43.521155552571265,
+      4.502507710758382
+    ],
+    "pedestrian_direction": [
+      0.45238687615132844,
+      -0.8918217951396135
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "full",
+    "pair_id": "geometry_1_seed_5311"
+  },
+  {
+    "id": "paired_1_roof_only",
+    "mode": "perpendicular_reverse",
+    "seed": 5311,
+    "rotation_degrees": 6,
+    "translation": [
+      -2,
+      1.5
+    ],
+    "start_delta": [
+      -0.1,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        -0.15
+      ],
+      [
+        0,
+        0.2
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      43.521155552571265,
+      4.502507710758382
+    ],
+    "pedestrian_direction": [
+      0.45238687615132844,
+      -0.8918217951396135
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "roof_only",
+    "pair_id": "geometry_1_seed_5311"
+  },
+  {
+    "id": "paired_1_no_observation",
+    "mode": "perpendicular_reverse",
+    "seed": 5311,
+    "rotation_degrees": 6,
+    "translation": [
+      -2,
+      1.5
+    ],
+    "start_delta": [
+      -0.1,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        -0.15
+      ],
+      [
+        0,
+        0.2
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      43.521155552571265,
+      4.502507710758382
+    ],
+    "pedestrian_direction": [
+      0.45238687615132844,
+      -0.8918217951396135
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "no_observation",
+    "pair_id": "geometry_1_seed_5311"
+  },
+  {
+    "id": "paired_1_no_speed_search",
+    "mode": "perpendicular_reverse",
+    "seed": 5311,
+    "rotation_degrees": 6,
+    "translation": [
+      -2,
+      1.5
+    ],
+    "start_delta": [
+      -0.1,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        -0.15
+      ],
+      [
+        0,
+        0.2
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      43.521155552571265,
+      4.502507710758382
+    ],
+    "pedestrian_direction": [
+      0.45238687615132844,
+      -0.8918217951396135
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "no_speed_search",
+    "pair_id": "geometry_1_seed_5311"
+  },
+  {
+    "id": "paired_1_uniform_one",
+    "mode": "perpendicular_reverse",
+    "seed": 5311,
+    "rotation_degrees": 6,
+    "translation": [
+      -2,
+      1.5
+    ],
+    "start_delta": [
+      -0.1,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        -0.15
+      ],
+      [
+        0,
+        0.2
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      43.521155552571265,
+      4.502507710758382
+    ],
+    "pedestrian_direction": [
+      0.45238687615132844,
+      -0.8918217951396135
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "uniform_one",
+    "pair_id": "geometry_1_seed_5311"
+  },
+  {
+    "id": "paired_2_full_segment",
+    "mode": "parallel",
+    "seed": 5312,
+    "rotation_degrees": 4,
+    "translation": [
+      2,
+      -1
+    ],
+    "start_delta": [
+      0.2,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        -0.1,
+        0.1
+      ],
+      [
+        0.2,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      58.17485487512924,
+      -0.1628108362864391
+    ],
+    "pedestrian_direction": [
+      -0.02550712076127055,
+      0.9996746404658218
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "full_segment",
+    "pair_id": "geometry_2_seed_5312"
+  },
+  {
+    "id": "paired_2_full",
+    "mode": "parallel",
+    "seed": 5312,
+    "rotation_degrees": 4,
+    "translation": [
+      2,
+      -1
+    ],
+    "start_delta": [
+      0.2,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        -0.1,
+        0.1
+      ],
+      [
+        0.2,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      58.17485487512924,
+      -0.1628108362864391
+    ],
+    "pedestrian_direction": [
+      -0.02550712076127055,
+      0.9996746404658218
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "full",
+    "pair_id": "geometry_2_seed_5312"
+  },
+  {
+    "id": "paired_2_uniform_one",
+    "mode": "parallel",
+    "seed": 5312,
+    "rotation_degrees": 4,
+    "translation": [
+      2,
+      -1
+    ],
+    "start_delta": [
+      0.2,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        -0.1,
+        0.1
+      ],
+      [
+        0.2,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      58.17485487512924,
+      -0.1628108362864391
+    ],
+    "pedestrian_direction": [
+      -0.02550712076127055,
+      0.9996746404658218
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "uniform_one",
+    "pair_id": "geometry_2_seed_5312"
+  },
+  {
+    "id": "paired_2_no_speed_search",
+    "mode": "parallel",
+    "seed": 5312,
+    "rotation_degrees": 4,
+    "translation": [
+      2,
+      -1
+    ],
+    "start_delta": [
+      0.2,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        -0.1,
+        0.1
+      ],
+      [
+        0.2,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      58.17485487512924,
+      -0.1628108362864391
+    ],
+    "pedestrian_direction": [
+      -0.02550712076127055,
+      0.9996746404658218
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "no_speed_search",
+    "pair_id": "geometry_2_seed_5312"
+  },
+  {
+    "id": "paired_2_no_observation",
+    "mode": "parallel",
+    "seed": 5312,
+    "rotation_degrees": 4,
+    "translation": [
+      2,
+      -1
+    ],
+    "start_delta": [
+      0.2,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        -0.1,
+        0.1
+      ],
+      [
+        0.2,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      58.17485487512924,
+      -0.1628108362864391
+    ],
+    "pedestrian_direction": [
+      -0.02550712076127055,
+      0.9996746404658218
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "no_observation",
+    "pair_id": "geometry_2_seed_5312"
+  },
+  {
+    "id": "paired_2_uniform_two",
+    "mode": "parallel",
+    "seed": 5312,
+    "rotation_degrees": 4,
+    "translation": [
+      2,
+      -1
+    ],
+    "start_delta": [
+      0.2,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        -0.1,
+        0.1
+      ],
+      [
+        0.2,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      58.17485487512924,
+      -0.1628108362864391
+    ],
+    "pedestrian_direction": [
+      -0.02550712076127055,
+      0.9996746404658218
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "uniform_two",
+    "pair_id": "geometry_2_seed_5312"
+  },
+  {
+    "id": "paired_2_roof_only",
+    "mode": "parallel",
+    "seed": 5312,
+    "rotation_degrees": 4,
+    "translation": [
+      2,
+      -1
+    ],
+    "start_delta": [
+      0.2,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        -0.1,
+        0.1
+      ],
+      [
+        0.2,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "paired_ablation_development",
+    "pedestrian_origin": [
+      58.17485487512924,
+      -0.1628108362864391
+    ],
+    "pedestrian_direction": [
+      -0.02550712076127055,
+      0.9996746404658218
+    ],
+    "stop_on_contact": true,
+    "ablation_policy": "roof_only",
+    "pair_id": "geometry_2_seed_5312"
+  }
+]

@@ -5,7 +5,7 @@ from pathlib import Path
 import yaml
 
 
-def write_profile(output, map_path, bridge_path, root=None):
+def write_profile(output, map_path, bridge_path, root=None, behavior_tree=False):
     root = Path(root or Path(__file__).parent).resolve()
     output = Path(output).expanduser().resolve()
     map_path = Path(map_path).expanduser().resolve()
@@ -22,7 +22,16 @@ def write_profile(output, map_path, bridge_path, root=None):
     }
     config["c40_execution"]["c40_map"] = str(map_path)
     config["c40_execution"]["c40_global_trajectory"] = str(root / "data/sensor_demo.json")
+    config["c40_execution"]["c40_executer_type"] = "PlanningSyncExecuter"
+    config["c40_execution"]["c40_controller"] = "BehaviorStanleyController"
+    config["c40_execution"]["c40_execution_tasks"] = [
+        "SensorTelemetryTask",
+        "PlanningCoordinatorTask",
+    ]
+    if behavior_tree:
+        config["c20_planning"]["c23_behavioral_strategy"] = "HDMapBehaviorTreePlanner"
     settings = config["plugins"]["avlite_behavior_hdmap"]
+    settings["coordinator_initial_strategy"] = "road-tree" if behavior_tree else "road-rules"
     settings["sensor_signal_geometry"] = str(root / "data/Town10HD_Opt_signals.json")
     settings["telemetry_directory"] = str(Path.home() / ".local/state/avlite" / output.stem)
     output.parent.mkdir(parents=True, exist_ok=True)

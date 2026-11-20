@@ -72,7 +72,7 @@ Installed profile: `sensor-road` (150 m urban route).
 
 ```bash
 PYTHONNOUSERSITE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
-/path/to/user/miniconda3/envs/avlite-carla/bin/python -m pytest \
+/home/iaroslav/miniconda3/envs/avlite-carla/bin/python -m pytest \
   test/c40_execution test/plugins/test_hdmap_behavior_plugin.py \
   test/plugins/test_sensor_regulatory.py -q --disable-warnings
 ```

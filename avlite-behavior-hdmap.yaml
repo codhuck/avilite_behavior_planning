@@ -1,0 +1,54 @@
+# BasicSim preview using maps bundled with AVLite. No CARLA or model download.
+c69_apps:
+  c60_selected_profile: avlite-behavior-hdmap
+  c62_community_plugins:
+    avlite-behavior-hdmap: avlite-behavior-hdmap
+  c62_default_plugins:
+  - p60_headless_mode
+  - p60_setting_cli
+  - p60_visualizer_tk
+  c62_load_plugins: true
+c10_perception:
+  c12_detection_strategy: ''
+  c12_tracking_strategy: ''
+  c12_prediction_strategy: ConstantVelocityPrediction
+c20_planning:
+  c23_behavioral_strategy: RaceBehaviorPlanner
+  c23_path_strategy: RacePathPlanner
+  c23_velocity_strategy: RaceVelocityPlanner
+c40_execution:
+  c40_bridge: PlanningBasicSim
+  c40_executer_type: PlanningSyncExecuter
+  c40_perception: PerceptionPipeline
+  c40_localization: ''
+  c40_mapping: ''
+  c40_global_planner: GlobalCenterlineRacePlanner
+  c40_local_planner: BehaviorPlanningPipeline
+  c40_controller: BehaviorStanleyController
+  c40_execution_tasks:
+  - PlanningCoordinatorTask
+  - RaceTrafficTask
+  c40_map: data/race_boundary_yas_marina.map.json
+  c40_global_trajectory: data/yas_marina_real_race_line_mue_0_5_3_m_margin.json
+  c40_start_pose:
+  - 274.436279296875
+  - -714.0538330078125
+  - -0.4307895964327141
+  c40_sim_dt: 0.05
+  c40_perception_dt: 0.05
+  c40_control_dt: 0.05
+  c40_replan_dt: 0.05
+  c40_pace_sim: true
+  c40_pace_control: true
+  c40_pace_perception: true
+  c40_pace_replan: true
+  c41_world_capabilities: null
+  c41_world_stack_capabilities:
+  - LOCALIZATION
+  - DETECTION
+  - TRACKING
+  c46_npc_control: false
+plugins:
+  avlite_behavior_hdmap:
+    coordinator_initial_strategy: race
+    cruise_speed_limit: 3.0

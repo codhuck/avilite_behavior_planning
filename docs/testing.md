@@ -1,0 +1,85 @@
+# Tests
+
+Run commands from the plugin directory with the AVLite environment active.
+Output filenames and profile names in these examples must be unused.
+
+## Unit tests and style
+
+```bash
+python -m pip install pytest ruff
+python -m pytest --rootdir=.. --import-mode=importlib -q tests
+ruff check .
+ruff format --check .
+```
+
+The parent root directory lets pytest import the plugin's root `__init__.py`
+correctly. These tests do not require CARLA or a display.
+
+## BasicSim
+
+```bash
+python tools/coordinator_demo.py --mode both --repeat 3 --output logs/coordination.json
+python tools/check_parking.py --parking-type all --output logs/parking
+```
+
+Each coordination run drives, rejects a moving handover, brakes, switches
+planners and drives again. The race fixture has two scripted rivals. Parking
+covers three types with normal, mirrored, rotated, occupied, intrusion/resume
+and stale-observation cases.
+
+To check a generated profile through AVLite's loader and executor factory:
+
+```bash
+python tools/prepare_coordinator_profile.py --mode road \
+  --output ~/.config/avlite/community-road.yaml
+python tools/check_coordinator_profile.py --profile community-road \
+  --output logs/road-factory.json
+```
+
+Use the same `AVLITE_CONFIG_DIR` for both commands if you override the default.
+The checker verifies the loaded plugin path, runs 60 ticks and checks that the
+vehicle moves. The CI workflow runs these checks against a pinned core revision.
+
+## Results — 20 November 2026
+
+Core: AVLite 0.6.7, commit `1df512a3718d78a4d737e07178a9db03cf5d4f05`.
+The core checkout was unchanged. The plugin was copied to a separate directory
+and tested with isolated configuration paths. Dependencies were installed in a
+separate venv using existing system packages.
+
+| Check | Result |
+| --- | --- |
+| Standalone tests, including the extracted release archive | 153 passed |
+| Related development-workspace regressions | 124 passed |
+| Road/race coordination | 6/6 passed |
+| Parking scenarios | 18/18 passed |
+| Recommended, generated road and generated race profiles | 3/3 passed |
+| Ruff lint and formatting | Passed |
+| Bundled classifier load from the archive | Passed |
+
+Both race profiles contained two rivals. Profile checks did not import CARLA.
+Parking runs recorded no sampled body collisions or drivable-boundary violations;
+occupied and stale-input cases remained blocked as expected.
+
+Reports are retained under `logs/community_plugin_20261120/` in the development
+workspace. `completion.json` lists the individual files and archive hash. The full
+workspace suite was not completed: initial Tk checks lacked display access and
+subsequent runs exhausted disk space. The 124 related tests passed afterward.
+Interactive GUI acceptance and new live CARLA runs were outside this check.
+The hosted CI workflow has not run yet.
+
+## CARLA and earlier experiments
+
+CARLA runners require an idle server and the matching bridge. Some parking
+runners replace the map with a test pad; read their setup instructions first.
+Results depend on the recorded source revision and configuration.
+
+- [CARLA coordination](coordination-carla-validation.md)
+- [Sensor perception](../SENSOR_VALIDATION.md)
+- [Road and race runs](../VALIDATION.md)
+- [Sensor parking](sensor-parking-validation.md)
+- [Parking robustness](parking-robustness-validation.md)
+
+BasicSim results do not measure camera accuracy. The reported CARLA experiments
+use static surveyed geometry and simulator ego localization; real-road operation
+has not been validated.

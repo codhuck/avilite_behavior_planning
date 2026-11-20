@@ -20,6 +20,7 @@ from shapely.geometry import LineString, Point, Polygon
 
 from .observations import RegulatoryObservation
 from .regulatory import RegulatoryKind, extract_regulatory_features
+from .sensor_contract import validate_regulatory_frame
 from .settings import PluginSettings
 from .traffic_light_vision import (
     SignalPerception,
@@ -259,6 +260,12 @@ class SensorRegulatoryDetector(DetectionStrategy):
             self.green_streak.clear()
             self.clear_since.clear()
             obs.diagnostics = {"status": "missing_or_unsynchronised_sensors"}
+            return pm
+        contract_error = validate_regulatory_frame(sensors)
+        if contract_error is not None:
+            self.green_streak.clear()
+            self.clear_since.clear()
+            obs.diagnostics = {"status": contract_error}
             return pm
         stamp = float(camera.stamp)
         if self.last_stamp is not None and stamp <= self.last_stamp:

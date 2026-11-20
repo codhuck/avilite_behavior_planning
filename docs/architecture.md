@@ -1,11 +1,12 @@
-# Architecture and behavior
+# Architecture
 
-## Data flow
+The plugin adds strategies to AVLite's existing perception, planning, control
+and task interfaces.
 
 ```mermaid
 flowchart LR
     Sensors[RGB and LiDAR] --> Detector[SensorRegulatoryDetector]
-    Geometry[Static signal geometry and ego pose] --> Detector
+    Geometry[Signal survey and ego pose] --> Detector
     Detector --> Model[PerceptionModel]
     Model --> Behavior[Behavior planner]
     Map[HD map and route] --> Behavior
@@ -14,56 +15,71 @@ flowchart LR
     Speed --> Control[Controller]
 ```
 
-`SensorRegulatoryDetector` performs image inference and geometric association.
-It publishes `RegulatoryObservation`; the behavior planner consumes observations
-without importing the classifier. `SensorTelemetryTask` records the result.
-`CarlaRegulatoryTask` is a separate ground-truth source for comparison scenarios,
-not a fallback when camera inference fails.
-
 ## Road planning
 
-`HDMapLaneFollowingPlanner` follows connected lanes. `regulatory.py` extracts
-OpenDRIVE controls, lane applicability and crossing geometry.
-`HDMapBehaviorPlanner` handles STOP approach and continuous stopped dwell,
-traffic-light waiting, occupied-crosswalk yielding and reduced crossing speed.
-`HDMapStopBehaviorPlanner` is a compatibility alias.
+`regulatory.py` extracts OpenDRIVE controls, lane applicability and crossing
+geometry. `HDMapLaneFollowingPlanner` follows connected lanes, excluding lateral
+lane-change edges.
 
-`ReferencePathPlanner` follows the selected route. `HDMapRuleVelocityPlanner`
-applies stopping, obstacle and curvature constraints to a copy of the trajectory,
-so a stop does not permanently zero subsequent reference speeds. Unknown or stale
-observations cause conservative waiting. Timing uses simulation seconds.
+`HDMapBehaviorPlanner` handles STOP approach and dwell, traffic-light waiting,
+crosswalk yielding and reduced crossing speed. `HDMapBehaviorTreePlanner`
+composes the same rule actions as a reactive tree. `HDMapStopBehaviorPlanner`
+is retained as a compatibility alias.
+
+`ReferencePathPlanner` follows the route. `HDMapRuleVelocityPlanner` applies
+stopping, obstacle, curvature and configured speed limits to a copy of its
+velocity profile. Unknown or stale observations cause waiting. Dwell and
+freshness checks use simulation seconds.
 
 ## Race planning
 
 `RaceBehaviorPlanner` requests following or passing a slower rival.
-`RacePathPlanner` checks proposed lattice paths against predicted collisions and
-oriented vehicle clearance. It can hold a passing corridor and use a checked
-return path; an unavailable safe path results in following or braking.
-`RaceVelocityPlanner` applies the behavior speed limits and obstacle/curvature
-envelope. This is experimental low-speed racing behavior.
+`RacePathPlanner` checks lattice proposals against predicted collisions and
+oriented vehicle clearance. It holds a passing corridor and checks the return
+path; if no feasible path is available, the vehicle follows or brakes.
+`RaceVelocityPlanner` applies the behavior and obstacle speed limits.
 
-`RaceTrafficTask` creates scripted rivals in BasicSim and cleans up its own
-actors. It does not create CARLA traffic. See the
-[validation report](../VALIDATION.md) for the tested scenarios.
+`RaceTrafficTask` creates two scripted rivals in BasicSim and removes its own
+actors on reset. It does not spawn CARLA traffic. The tested scenarios use
+low-speed scripted traffic; see [validation](../VALIDATION.md).
 
-## Replacing planners
+## Planner selection
 
-The dispatchers select road or race algorithms by concrete map type. Unknown
-maps are rejected; they are not treated as race tracks. Mixed road/track
-transitions inside one map are not implemented.
+`PlanningCoordinatorTask` selects registered configurations at startup or on an
+explicit request. `PlannerSwitchTask` builds the candidate planners and checks
+the route, capabilities and first local plan before replacing the active pair.
+It resets controller integrators and clears the held command after acceptance.
+Moving vehicles and stale or invalid requests retain the current pair.
 
-`PlannerSwitchTask` accepts `SelectPlanningStack(global_plan, expected_map)`
-through the executor task runner. It validates the candidate route, first local
-plan and capability requirements before publishing the pair. Successful
-replacement resets controller integrators and the held control command.
-Moving vehicles, stale requests and failed validation retain the current pair.
-This protocol supports `SyncExecuter`; threaded replacement needs separate
-synchronization. It replaces planning, not perception or the simulated world.
+Use `PlanningSyncExecuter` on stock AVLite. Threaded replacement requires a
+separate synchronization mechanism. The task API and lifecycle are documented
+in [task coordination](task-coordination.md).
 
-## Perception boundaries
+## Perception
 
-The standalone `avlite_signal_perception` package needs no AVLite or CARLA
-imports. It classifies image crops and combines associated heads. The AVLite
-adapter owns frame freshness, projection, green confirmation and pedestrian
-fusion. See [the package guide](../SIGNAL_PACKAGE.md) and
-[adapter reference](../SENSOR_PERCEPTION.md).
+`SensorRegulatoryDetector` runs image inference and geometric association, then
+publishes `RegulatoryObservation`. Behavior consumes that observation without
+calling the classifier. `SensorTelemetryTask` records it.
+
+`CarlaRegulatoryTask` supplies ground-truth observations for comparison
+scenarios. Do not enable it in sensor profiles. Detector failures remain unknown
+and cannot switch to ground-truth observations.
+
+The independent `avlite_signal_perception` package classifies RGB crops and
+combines associated heads. The AVLite adapter handles projection, frame age,
+green confirmation and pedestrian fusion. See [classifier setup](../SIGNAL_PACKAGE.md)
+and [detector reference](../SENSOR_PERCEPTION.md).
+
+## Replacing perception
+
+`PerceptionSwitchTask` accepts `SelectPerceptionStack(perception, expected_map)`.
+Construct a fresh `PerceptionStrategy` against `executer.pm`, add the switch task
+to the runner, then submit the event through `executer.task_runner.notify(...)`.
+Execution tasks must be enabled and the executor paused with the vehicle stopped.
+
+The task checks the map, perception model and capability requirements before
+replacement. It then clears previous object lists and regulatory/parking
+observations. `PlanningSyncExecuter.refresh_pipeline()` requests fresh perception
+and planning before the next enabled control stage. Keep those stages enabled
+when resuming. Construct models and configure sensors before submitting the
+handover request.

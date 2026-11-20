@@ -5,6 +5,50 @@ from pydantic import Field
 
 
 class PluginSettingsSchema(SettingsSchema):
+    cruise_speed_limit: float | None = Field(
+        default=None,
+        gt=0,
+        description="Optional reference-speed ceiling in m/s; the community demo uses 3.0.",
+    )
+    coordinator_initial_strategy: str = Field(
+        default="auto",
+        description="PlanningCoordinatorTask startup selection: auto, road-rules, road-tree or race. Auto selects by map type.",
+    )
+    parking_hazard_support_radius: float = Field(
+        default=2.0,
+        ge=0.0,
+        description="Require two independent ground observations within this distance of a LiDAR hazard (multi-LiDAR only).",
+    )
+    parking_minimum_sensor_support: int = Field(
+        default=1,
+        ge=1,
+        le=8,
+        description="Independent synchronized LiDARs required to confirm each ground cell; higher values can require stopping.",
+    )
+    parking_multi_lidar: bool = Field(
+        default=False,
+        description="Fuse simultaneous calibrated LiDARs; explicit ego-footprint exception requires a collision-free initial pose.",
+    )
+    parking_active_observation: bool = Field(
+        default=False,
+        description="Enable bounded visibility-aware observation manoeuvres for sensor parking.",
+    )
+    parking_scene_file: str = Field(
+        default="", description="Surveyed parking spaces JSON in localization coordinates."
+    )
+    parking_lidar_occupancy: bool = Field(
+        default=False,
+        description="Use current LiDAR ground cells for parking; unseen cells block motion.",
+    )
+    parking_ground_z: float | None = Field(
+        default=None,
+        description="Surveyed flat parking ground elevation; required for LiDAR occupancy.",
+    )
+    parking_simulator_obstacles: bool = Field(
+        default=False,
+        description="BasicSim demonstration only: use simulator occupancy instead of a ParkingObservation producer.",
+    )
+
     sensor_signal_model_path: str = Field(
         default="",
         description="Custom weights matching the selected classifier architecture; empty uses its default artifact.",

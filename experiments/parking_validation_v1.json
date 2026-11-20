@@ -1,0 +1,170 @@
+[
+  {
+    "id": "new_geometry_perpendicular_forward",
+    "mode": "perpendicular_forward",
+    "seed": 110,
+    "rotation_degrees": 7,
+    "translation": [
+      4,
+      1
+    ],
+    "start_delta": [
+      0.4,
+      0.15,
+      0.01745329252
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        -0.3
+      ],
+      [
+        0,
+        0.4
+      ]
+    ],
+    "max_sim_seconds": 300
+  },
+  {
+    "id": "new_geometry_perpendicular_reverse",
+    "mode": "perpendicular_reverse",
+    "seed": 111,
+    "rotation_degrees": -9,
+    "translation": [
+      -3,
+      2
+    ],
+    "start_delta": [
+      0.4,
+      0.15,
+      0.01745329252
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        -0.3
+      ],
+      [
+        0,
+        0.4
+      ]
+    ],
+    "max_sim_seconds": 300
+  },
+  {
+    "id": "new_geometry_parallel",
+    "mode": "parallel",
+    "seed": 112,
+    "rotation_degrees": 5,
+    "translation": [
+      3,
+      -1
+    ],
+    "start_delta": [
+      0.4,
+      0.15,
+      0.01745329252
+    ],
+    "neighbour_offsets": [
+      [
+        0.0,
+        0.15
+      ],
+      [
+        0.3,
+        -0.15
+      ]
+    ],
+    "max_sim_seconds": 300
+  },
+  {
+    "id": "noisy_crossing_perpendicular_forward",
+    "mode": "perpendicular_forward",
+    "seed": 210,
+    "rotation_degrees": -5,
+    "translation": [
+      -3,
+      1
+    ],
+    "start_delta": [
+      -0.25,
+      -0.1,
+      -0.01745329252
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        0.2
+      ],
+      [
+        0,
+        -0.3
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.6,
+    "max_sim_seconds": 300
+  },
+  {
+    "id": "noisy_crossing_perpendicular_reverse",
+    "mode": "perpendicular_reverse",
+    "seed": 211,
+    "rotation_degrees": 8,
+    "translation": [
+      4,
+      -1
+    ],
+    "start_delta": [
+      -0.25,
+      -0.1,
+      -0.01745329252
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        0.2
+      ],
+      [
+        0,
+        -0.3
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.6,
+    "max_sim_seconds": 300
+  },
+  {
+    "id": "noisy_crossing_parallel",
+    "mode": "parallel",
+    "seed": 212,
+    "rotation_degrees": -6,
+    "translation": [
+      -4,
+      1
+    ],
+    "start_delta": [
+      -0.25,
+      -0.1,
+      -0.01745329252
+    ],
+    "neighbour_offsets": [
+      [
+        -0.25,
+        0
+      ],
+      [
+        0.25,
+        0
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.6,
+    "max_sim_seconds": 300
+  }
+]

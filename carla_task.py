@@ -94,6 +94,7 @@ class CarlaRegulatoryTask(TaskStrategy):
             wait_duration=plan.wait_duration,
             planner_mode=getattr(plan, "planner_mode", "road"),
             path_planner=getattr(plan, "path_planner", ""),
+            behavior_tree_trace=json.dumps(getattr(plan, "behavior_tree_trace", [])),
             rule_id=plan.rule_id,
             rule_distance=plan.rule_distance,
             observation_source=getattr(

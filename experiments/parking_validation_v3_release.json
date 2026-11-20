@@ -1,0 +1,157 @@
+[
+  {
+    "id": "regression_noisy_parallel_search",
+    "mode": "parallel",
+    "seed": 1212,
+    "rotation_degrees": -7,
+    "translation": [
+      -4,
+      1
+    ],
+    "start_delta": [
+      -0.15,
+      -0.15000000000000002,
+      -0.01745329252
+    ],
+    "neighbour_offsets": [
+      [
+        -0.25,
+        0
+      ],
+      [
+        0.25,
+        0
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.6,
+    "max_sim_seconds": 300,
+    "pedestrian_pause_seconds": 3.0,
+    "split": "regression_of_v2_interruption"
+  },
+  {
+    "id": "regression_parallel_terminal",
+    "mode": "parallel",
+    "seed": 1112,
+    "rotation_degrees": 7,
+    "translation": [
+      3,
+      -1
+    ],
+    "start_delta": [
+      0.5,
+      0.09999999999999999,
+      0.01745329252
+    ],
+    "neighbour_offsets": [
+      [
+        0.0,
+        0.15
+      ],
+      [
+        0.3,
+        -0.15
+      ]
+    ],
+    "max_sim_seconds": 300,
+    "split": "regression_of_v2_failure"
+  },
+  {
+    "id": "release_noisy_crossing_perpendicular_forward",
+    "mode": "perpendicular_forward",
+    "seed": 3210,
+    "rotation_degrees": 3,
+    "translation": [
+      2,
+      -2
+    ],
+    "start_delta": [
+      0.2,
+      -0.2,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        0.35
+      ],
+      [
+        0,
+        -0.15
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 1.0,
+    "pedestrian_pause_seconds": 12.0,
+    "max_sim_seconds": 300,
+    "split": "heldout_after_terminal_fix"
+  },
+  {
+    "id": "release_noisy_crossing_perpendicular_reverse",
+    "mode": "perpendicular_reverse",
+    "seed": 3211,
+    "rotation_degrees": -3,
+    "translation": [
+      -5,
+      0
+    ],
+    "start_delta": [
+      -0.2,
+      0.1,
+      -0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        -0.2
+      ],
+      [
+        0,
+        0.25
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 1.0,
+    "pedestrian_pause_seconds": 12.0,
+    "max_sim_seconds": 300,
+    "split": "heldout_after_terminal_fix"
+  },
+  {
+    "id": "release_noisy_crossing_parallel",
+    "mode": "parallel",
+    "seed": 3212,
+    "rotation_degrees": 11,
+    "translation": [
+      1,
+      2
+    ],
+    "start_delta": [
+      0.1,
+      0.2,
+      -0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        -0.15,
+        0.1
+      ],
+      [
+        0.15,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 1.0,
+    "pedestrian_pause_seconds": 12.0,
+    "max_sim_seconds": 300,
+    "split": "heldout_after_terminal_fix"
+  }
+]

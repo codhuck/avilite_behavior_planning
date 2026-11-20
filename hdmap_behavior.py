@@ -167,6 +167,69 @@ class HDMapBehaviorPlanner(LocalBehavioralPlanningStrategy):
         self.events.append(record)
         log.info("HDMAP %s", record)
 
+    def _evaluate_rule(self, rule, distance, ego_s, now, obs, fresh, plan):
+        if rule.feature.kind == RegulatoryKind.STOP_SIGN:
+            return self._stop_rule(rule, distance, ego_s, now, obs, fresh, plan)
+        if rule.feature.kind == RegulatoryKind.TRAFFIC_LIGHT:
+            return self._light_rule(rule, distance, ego_s, now, obs, fresh, plan)
+        return self._crossing_rule(rule, distance, ego_s, now, obs, fresh, plan)
+
+    def _stop_rule(self, rule, distance, ego_s, now, obs, fresh, plan):
+        f, ego = rule.feature, self.env.ego_vehicle
+        reason, hold = f.kind.value, False
+        arrived = abs(distance) <= PluginSettings.arrival_tolerance
+        if arrived and abs(ego.velocity) <= PluginSettings.stopped_speed:
+            began = self._stopped_since.setdefault(f.id, now)
+            if now - began >= PluginSettings.stop_hold_time:
+                self._completed.add(f.id)
+                self._event(
+                    "stop_completed", rule_id=f.id, distance=distance, hold_time=now - began
+                )
+                return None
+            state, hold = "HOLD_STOP", True
+        else:
+            self._stopped_since.pop(f.id, None)
+            state = "APPROACH_STOP"
+        if distance < -PluginSettings.arrival_tolerance:
+            state, reason = "VIOLATION", "stop_target_overrun"
+        return state, reason, hold
+
+    def _light_rule(self, rule, distance, ego_s, now, obs, fresh, plan):
+        f, ego = rule.feature, self.env.ego_vehicle
+        reason, hold = f.kind.value, False
+        color = obs.lights.get(f.id, "Unknown") if fresh else "Unknown"
+        if color == "Green":
+            if ego_s + float(ego.length) / 2 > rule.route_s:
+                self._completed.add(f.id)
+                self._event("light_passed_green", rule_id=f.id)
+            return None
+        state, reason = "WAIT_LIGHT", "light_" + color.lower()
+        return state, reason, hold
+
+    def _crossing_rule(self, rule, distance, ego_s, now, obs, fresh, plan):
+        f, ego = rule.feature, self.env.ego_vehicle
+        reason, hold = f.kind.value, False
+        # Keep the crossing active until the rear bumper clears its
+        # actual route intersection, including wide/diagonal crossings.
+        if rule.exit_s is not None and ego_s - float(ego.length) / 2 > rule.exit_s:
+            return None
+        occupied = None
+        if fresh and hasattr(obs, "crossings"):
+            occupied = obs.crossings.get(f.id)
+        elif fresh:
+            area = Polygon(f.polygon).buffer(PluginSettings.pedestrian_margin)
+            occupied = any(area.covers(Point(p[0], p[1])) for p in obs.pedestrians)
+        if occupied is False:
+            plan.speed_limit = PluginSettings.crosswalk_speed
+            plan.behavior_state, plan.behavior_reason = "SLOW_CROSSWALK", "crosswalk_clear"
+            plan.rule_id, plan.rule_distance = f.id, distance
+            return None
+        state, reason = (
+            "YIELD_PEDESTRIAN",
+            "crosswalk_occupied" if occupied else "crosswalk_unknown",
+        )
+        return state, reason, hold
+
     def plan_behavior(self, plan):
         ego = self.env.ego_vehicle
         ego_s, _ = self.global_plan.trajectory.convert_xy_to_sd(ego.x, ego.y)
@@ -215,51 +278,10 @@ class HDMapBehaviorPlanner(LocalBehavioralPlanningStrategy):
             distance = float(target_s - ego_s)
             if distance > PluginSettings.stop_lookahead:
                 continue
-            reason, hold = f.kind.value, False
-            if f.kind == RegulatoryKind.STOP_SIGN:
-                arrived = abs(distance) <= PluginSettings.arrival_tolerance
-                if arrived and abs(ego.velocity) <= PluginSettings.stopped_speed:
-                    began = self._stopped_since.setdefault(f.id, now)
-                    if now - began >= PluginSettings.stop_hold_time:
-                        self._completed.add(f.id)
-                        self._event(
-                            "stop_completed", rule_id=f.id, distance=distance, hold_time=now - began
-                        )
-                        continue
-                    state, hold = "HOLD_STOP", True
-                else:
-                    self._stopped_since.pop(f.id, None)
-                    state = "APPROACH_STOP"
-                if distance < -PluginSettings.arrival_tolerance:
-                    state, reason = "VIOLATION", "stop_target_overrun"
-            elif f.kind == RegulatoryKind.TRAFFIC_LIGHT:
-                color = obs.lights.get(f.id, "Unknown") if fresh else "Unknown"
-                if color == "Green":
-                    if ego_s + float(ego.length) / 2 > rule.route_s:
-                        self._completed.add(f.id)
-                        self._event("light_passed_green", rule_id=f.id)
-                    continue
-                state, reason = "WAIT_LIGHT", "light_" + color.lower()
-            else:
-                # Keep the crossing active until the rear bumper clears its
-                # actual route intersection, including wide/diagonal crossings.
-                if rule.exit_s is not None and ego_s - float(ego.length) / 2 > rule.exit_s:
-                    continue
-                occupied = None
-                if fresh and hasattr(obs, "crossings"):
-                    occupied = obs.crossings.get(f.id)
-                elif fresh:
-                    area = Polygon(f.polygon).buffer(PluginSettings.pedestrian_margin)
-                    occupied = any(area.covers(Point(p[0], p[1])) for p in obs.pedestrians)
-                if occupied is False:
-                    plan.speed_limit = PluginSettings.crosswalk_speed
-                    plan.behavior_state, plan.behavior_reason = "SLOW_CROSSWALK", "crosswalk_clear"
-                    plan.rule_id, plan.rule_distance = f.id, distance
-                    continue
-                state, reason = (
-                    "YIELD_PEDESTRIAN",
-                    "crosswalk_occupied" if occupied else "crosswalk_unknown",
-                )
+            decision = self._evaluate_rule(rule, distance, ego_s, now, obs, fresh, plan)
+            if decision is None:
+                continue
+            state, reason, hold = decision
             plan.behavior = LocalBehavior.STOP
             plan.behavior_state, plan.behavior_reason = state, reason
             plan.rule_id, plan.rule_distance = f.id, distance
@@ -367,6 +389,8 @@ class HDMapRuleVelocityPlanner(VelocityLocalPlanner):
             return plan
         velocity = np.array(tj.velocity, dtype=float, copy=True)
         velocity = self.curve_speed_profile(tj, velocity)
+        if PluginSettings.cruise_speed_limit is not None:
+            velocity = np.minimum(velocity, PluginSettings.cruise_speed_limit)
         if getattr(plan, "speed_limit", None) is not None:
             velocity = np.minimum(velocity, plan.speed_limit)
         if getattr(plan.behavior, "name", None) == "STOP" and hasattr(plan, "stop_distance"):

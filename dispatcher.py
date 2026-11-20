@@ -4,7 +4,6 @@ import logging
 
 from avlite.c10_perception.c11_perception_model import HDMap, RaceMap
 from avlite.c20_planning.c22_global_planning_strategy import GlobalPlannerStrategy
-from avlite.c20_planning.c23_local_planning_strategy import LocalPlanningPipeline
 from avlite.c20_planning.c25_global_race_planners import GlobalCenterlineRacePlanner
 from avlite.c20_planning.c26_local_path_planners import ReferencePathPlanner  # noqa: F401 -- register strategy
 from avlite.c20_planning.c27_local_behavioral_and_velocity_planners import (
@@ -17,6 +16,8 @@ from avlite.c20_planning.c29_settings import PlanningSettings
 from .global_planner import HDMapLaneFollowingPlanner
 from .hdmap_behavior import HDMapBehaviorPlanner, HDMapRuleVelocityPlanner  # noqa: F401 -- register strategies
 from .race_behavior import RaceBehaviorPlanner, RacePathPlanner, RaceVelocityPlanner  # noqa: F401 -- register strategies
+from .runtime import BehaviorPlanningPipeline
+from .tree_planner import HDMapBehaviorTreePlanner  # noqa: F401 -- register strategy
 
 log = logging.getLogger(__name__)
 
@@ -63,7 +64,7 @@ class GlobalPlannerDispatcher(GlobalPlannerStrategy):
         return self.global_plan
 
 
-class PlannerDispatcher(LocalPlanningPipeline):
+class PlannerDispatcher(BehaviorPlanningPipeline):
     """Switch only on route replacement, never drop road rules on missing data."""
 
     MODES = {
@@ -82,18 +83,27 @@ class PlannerDispatcher(LocalPlanningPipeline):
             selected.c23_path_strategy,
             selected.c23_velocity_strategy,
         ) = self.MODES[self.mode]
+        if (
+            self.mode == "road"
+            and self._source_setting.c23_behavioral_strategy == "HDMapBehaviorTreePlanner"
+        ):
+            selected.c23_behavioral_strategy = "HDMapBehaviorTreePlanner"
         super().__init__(global_plan, env, selected)
         if any(stage is None for stage in self._stages):
             raise ValueError("Dispatcher stage is unavailable: " + self.mode)
         self._selected_map = env.map
         self._last_race_decision = None
-        log.info("DISPATCH local mode=%s stages=%s", self.mode, self.MODES[self.mode])
+        log.info(
+            "DISPATCH local mode=%s stages=%s",
+            self.mode,
+            tuple(type(stage).__name__ for stage in self._stages),
+        )
 
     def set_global_plan(self, global_plan, ego_xy=None):
         # Build first: a failed selection must not partially overwrite stages.
         candidate = type(self)(global_plan, self.pm, self._source_setting)
         if ego_xy is not None:
-            LocalPlanningPipeline.set_global_plan(candidate, global_plan, ego_xy)
+            BehaviorPlanningPipeline.set_global_plan(candidate, global_plan, ego_xy)
         self.__dict__.update(candidate.__dict__)
 
     @property

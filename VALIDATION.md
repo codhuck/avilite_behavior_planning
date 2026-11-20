@@ -333,7 +333,7 @@ CSV подтверждает не менее 1 с при скорости ≤0,1
 
 ```bash
 conda activate avlite-carla
-cd /path/to/avlite
+cd /home/iaroslav/avlite
 PYTHONNOUSERSITE=1 python tools/run_hdmap_scenarios.py --repeats 2 --max-sim-time 600 --output logs/hdmap_new_run
 PYTHONNOUSERSITE=1 python tools/audit_hdmap_runs.py logs/hdmap_new_run
 PYTHONNOUSERSITE=1 python tools/report_hdmap_validation.py logs/hdmap_new_run

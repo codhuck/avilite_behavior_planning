@@ -18,7 +18,14 @@ def main():
     )
     p.add_argument("--map-path", type=Path, help="Matching Town10HD_Opt OpenDRIVE file")
     p.add_argument("--bridge-path", type=Path, help="Installed CARLA bridge plugin directory")
+    p.add_argument(
+        "--behavior-tree",
+        action="store_true",
+        help="Select the reactive road behavior tree in the new profile",
+    )
     args = p.parse_args()
+    if args.behavior_tree and not args.profile_output:
+        p.error("--behavior-tree requires --profile-output")
     if args.profile_output and (not args.map_path or not args.bridge_path):
         p.error("--profile-output requires --map-path and --bridge-path")
     if args.check and args.profile_output:
@@ -43,7 +50,14 @@ def main():
     if args.profile_output:
         from profile_setup import write_profile
 
-        result["profile"] = str(write_profile(args.profile_output, args.map_path, args.bridge_path))
+        result["profile"] = str(
+            write_profile(
+                args.profile_output,
+                args.map_path,
+                args.bridge_path,
+                behavior_tree=args.behavior_tree,
+            )
+        )
     print(json.dumps(result, indent=2))
 
 

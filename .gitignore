@@ -4,6 +4,7 @@ __pycache__/
 build/
 dist/
 .ruff_cache/
-models/*.onnx
-logs/
+
 .pytest_cache/
+logs/
+*.onnx

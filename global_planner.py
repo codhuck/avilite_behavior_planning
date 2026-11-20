@@ -20,3 +20,11 @@ class HDMapLaneFollowingPlanner(HDMapGlobalPlanner):
             graph, filter_edge=lambda a, b: not graph[a][b].get("lane_change", False)
         )
         super().__init__(route_map, max_velocity, wp_to_full_velocity)
+
+    def plan(self, perception_model=None, sensors=None):
+        route = super().plan(perception_model, sensors)
+        if route is not None and len(route.velocity):
+            # Stock 0.6.7 leaves a nonzero endpoint on short routes.
+            route.velocity[-1] = 0.0
+            route.trajectory.velocity[-1] = 0.0
+        return route

@@ -1,10 +1,12 @@
 # RGB/LiDAR perception
 
-For a new installation, follow the [README](README.md) and use the generated
-`sensor-road-trained` profile. Its default classifier is the bundled RGB MLP;
-see [Trained RGB backend](#trained-rgb-backend). The `sensor-road` setup below
-documents the earlier aperture classifier for reproducibility. Commands using
-`tools/` require the parent development workspace.
+`SensorRegulatoryDetector` combines RGB object detections and LiDAR geometry
+for traffic-light and crossing observations. For setup, use the profile generator
+in [SIGNAL_PACKAGE.md](SIGNAL_PACKAGE.md). Its default is the bundled RGB MLP;
+see [Trained RGB backend](#trained-rgb-backend).
+
+The `sensor-road` setup below records the earlier aperture classifier. Its
+`tools/` commands require the parent development workspace.
 
 `SensorRegulatoryDetector` replaces dynamic CARLA object queries in the
 `sensor-road` profile. It runs before planning in the ordinary perception

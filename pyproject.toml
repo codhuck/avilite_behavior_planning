@@ -26,3 +26,7 @@ select = ["E4", "E7", "E9", "F", "I"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--import-mode=importlib --rootdir=.."

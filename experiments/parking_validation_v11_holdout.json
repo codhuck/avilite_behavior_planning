@@ -1,0 +1,98 @@
+[
+  {
+    "id": "heldout_v11_perpendicular_forward",
+    "mode": "perpendicular_forward",
+    "seed": 4310,
+    "rotation_degrees": -5,
+    "translation": [
+      1.5,
+      1
+    ],
+    "start_delta": [
+      0.1,
+      -0.1,
+      -0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        0.2
+      ],
+      [
+        0,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "heldout_final_frozen_runtime"
+  },
+  {
+    "id": "heldout_v11_perpendicular_reverse",
+    "mode": "perpendicular_reverse",
+    "seed": 4311,
+    "rotation_degrees": 6,
+    "translation": [
+      -2,
+      1.5
+    ],
+    "start_delta": [
+      -0.1,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        0,
+        -0.15
+      ],
+      [
+        0,
+        0.2
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "heldout_final_frozen_runtime"
+  },
+  {
+    "id": "heldout_v11_parallel",
+    "mode": "parallel",
+    "seed": 4312,
+    "rotation_degrees": 4,
+    "translation": [
+      2,
+      -1
+    ],
+    "start_delta": [
+      0.2,
+      -0.1,
+      0.008726646259971648
+    ],
+    "neighbour_offsets": [
+      [
+        -0.1,
+        0.1
+      ],
+      [
+        0.2,
+        -0.1
+      ]
+    ],
+    "noise_stddev": 0.01,
+    "dropoff": 0.02,
+    "pedestrian": true,
+    "pedestrian_speed": 0.8,
+    "pedestrian_pause_seconds": 8,
+    "max_sim_seconds": 600,
+    "split": "heldout_final_frozen_runtime"
+  }
+]

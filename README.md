@@ -1,145 +1,107 @@
-# AVLite HD-map behavior plugin
+# avlite-behavior-hdmap
 
-Behavior planning and map-aware planner selection for AVLite. The plugin adds
-STOP handling, traffic-light waiting, crosswalk yielding and experimental race
-following/passing. An RGB/LiDAR detector supplies dynamic observations; a separate
-Python package provides replaceable traffic-light classifiers.
+Road and race behavior planning for [AVLite](https://github.com/AV-Lab/avlite).
+Registers planning strategies for STOP signs, traffic lights, crosswalks,
+following and overtaking, plus a task that selects and switches between them.
+Includes forward, reverse and parallel parking.
 
 **Plugin name:** `avlite-behavior-hdmap`
 
-## Requirements
-
-- Python 3.10 or newer and a compatible AVLite checkout. The tested workspace
-  uses AVLite 0.6.6 with planning/execution integration changes; compatibility
-  with an unmodified released AVLite installation has not been established.
-- For the city demo: the CARLA bridge, a running CARLA server with its matching
-  Python API, and `Town10HD_Opt.xodr`. Validation used CARLA 0.9.16.
-- For the race demo: BasicSim and the Yas Marina map/reference assets.
-- Python dependencies are listed in [requirements.txt](requirements.txt).
-  The installer downloads the pinned YOLO model; traffic-light weights are bundled.
-
 ## Install
 
-Clone into a directory named `avlite-behavior-hdmap` to preserve the plugin
-registry name. Activate the Python environment used by AVLite:
+Requires Python 3.10+ and AVLite 0.6.7. The plugin is not yet listed in the
+community catalog. Activate the AVLite environment, then clone and install:
 
 ```bash
-git clone git@github.com:codhuck/avilite_behavior_planning.git avlite-behavior-hdmap
+git clone https://github.com/codhuck/avilite_behavior_planning.git avlite-behavior-hdmap
 cd avlite-behavior-hdmap
+python -m pip install -r requirements.txt
 ```
 
-Then install from this directory:
+Generate a BasicSim profile and start AVLite:
 
 ```bash
-python install.py
-python install.py --check
+python tools/prepare_coordinator_profile.py --mode race \
+  --output ~/.config/avlite/community-race.yaml
+python -m avlite
 ```
 
-AVLite's plugin dependency installer can also install `requirements.txt` from
-this directory. Installation does not start CARLA or select an AVLite profile.
-See [the perception package guide](SIGNAL_PACKAGE.md) for standalone installation,
-model downloads and alternative classifiers.
+Select **community-race**, click **Reload Stack**, then **Start**. The example
+uses Yas Marina and two scripted rivals. Use `--mode road` with a different
+output filename for the small road example. CARLA is not required for either.
+The generator registers the plugin path and refuses to overwrite an existing
+profile. If you use `AVLITE_CONFIG_DIR`, write the profile there instead.
 
-## Configure and run
+## Configuration
 
-Generate a Town10 sensor profile using paths on your machine:
-
-```bash
-python install.py \
-  --profile-output ~/.config/avlite/sensor-road-trained.yaml \
-  --map-path /path/to/Town10HD_Opt.xodr \
-  --bridge-path /path/to/avlite-bridge-carla
-```
-
-Replace both `/path/to/…` values with existing paths. The generator resolves the
-plugin directory, bundled route and signal geometry, and chooses a telemetry
-folder. It refuses to overwrite an existing profile; choose another filename
-if necessary. Historical YAML files in `profiles/` contain development-machine
-paths and should not be copied unchanged.
-
-1. Start the compatible CARLA server on `localhost:2000`.
-2. Start AVLite with `python -m avlite` in its environment.
-3. Select `sensor-road-trained` (or the filename you chose), then **Reload Stack**.
-4. Press **Start**. Keep only one client responsible for advancing the simulation.
-
-The generated profile uses the dispatchers below. On Town10 they select the
-road planning stages listed in `c20_planning`:
+The [recommended profile](avlite-behavior-hdmap.yaml) uses AVLite's bundled Yas
+Marina map and limits reference speed to 3 m/s. The following excerpt shows the
+plugin registration and execution adapters:
 
 ```yaml
-c10_perception:
-  c12_detection_strategy: SensorRegulatoryDetector
-c20_planning:
-  c23_behavioral_strategy: HDMapBehaviorPlanner
-  c23_path_strategy: ReferencePathPlanner
-  c23_velocity_strategy: HDMapRuleVelocityPlanner
+c69_apps:
+  c62_community_plugins:
+    avlite-behavior-hdmap: avlite-behavior-hdmap
 c40_execution:
-  c40_global_planner: GlobalPlannerDispatcher
-  c40_local_planner: PlannerDispatcher
-  c40_execution_tasks: [SensorTelemetryTask, PlannerSwitchTask]
+  c40_bridge: PlanningBasicSim
+  c40_executer_type: PlanningSyncExecuter
+  c40_local_planner: BehaviorPlanningPipeline
+  c40_controller: BehaviorStanleyController
+  c40_execution_tasks: [PlanningCoordinatorTask, RaceTrafficTask]
 plugins:
   avlite_behavior_hdmap:
-    sensor_signal_backend: trained_rgb
+    coordinator_initial_strategy: race
+    cruise_speed_limit: 3.0
 ```
 
-This is a configuration excerpt, not a complete replacement profile. Change
-model settings with execution stopped, then reload the stack.
+The name sentinel resolves under AVLite's managed plugin directory. For another
+checkout location, use its path or generate a profile as shown above.
 
-## Planner selection
+`coordinator_initial_strategy` selects the planning configuration:
 
-| Map type | Global planner | Local behavior / path / velocity |
-| --- | --- | --- |
-| `HDMap` | `HDMapLaneFollowingPlanner` | `HDMapBehaviorPlanner` / `ReferencePathPlanner` / `HDMapRuleVelocityPlanner` |
-| `RaceMap` | `GlobalCenterlineRacePlanner` | `RaceBehaviorPlanner` / `RacePathPlanner` / `RaceVelocityPlanner` |
+| Value | Behavior |
+| --- | --- |
+| `auto` | `road-tree` on an HD map; `race` on a race map |
+| `road-rules` | Road rules implemented as a state machine |
+| `road-tree` | The same road rules composed as a reactive behavior tree |
+| `race` | Following, passing and returning to the reference path |
 
-`GlobalPlannerDispatcher` and `PlannerDispatcher` select by map type.
-`PlannerSwitchTask` replaces the planning stack while stopped, using
-`SyncExecuter`. It does not change the simulator, teleport the vehicle or switch
-perception. Yas Marina runs in BasicSim, not a CARLA race world.
-See [architecture and behavior](docs/architecture.md) for the contracts.
+Change startup settings with execution stopped, then reload the stack. Mission
+tasks can also request a stopped handover through `PlanningCoordinatorTask`.
+See [task coordination](docs/task-coordination.md) for the API.
+
+## Sensors and parking
+
+For camera/LiDAR perception, run `python install.py` to install and check the
+model assets. `python install.py --check` verifies an existing installation.
+The CARLA demo requires a matching server, Python API and bridge. Setup and
+classifier options are in [SIGNAL_PACKAGE.md](SIGNAL_PACKAGE.md).
+
+Parking uses `ParkingTask`, `ParkingPlanner` and `ParkingController`. Select the
+type through the task API; [parking.md](docs/parking.md) describes the scene
+format and examples. The custom **Parking…** dialog requires the development
+GUI and is not included in stock AVLite.
 
 ## Tests
 
-From the parent AVLite workspace with its Python environment activated:
+From this directory, with `pytest` and `ruff` installed:
 
 ```bash
-PYTHONNOUSERSITE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
-python -m pytest -q -o addopts='' \
-  test/plugins/test_signal_distribution.py \
-  test/plugins/test_traffic_light_vision.py \
-  test/plugins/test_sensor_regulatory.py \
-  test/plugins/test_hdmap_behavior_plugin.py test/c40_execution
+python -m pytest --rootdir=.. --import-mode=importlib -q tests
+ruff check .
+ruff format --check .
+python tools/coordinator_demo.py --mode both --repeat 3 --output logs/coordinator-check.json
 ```
 
-These tests live in the parent workspace, not the standalone perception wheel.
-The style-cleanup run passed all 192 tests, including timing-sensitive tests.
-Live CARLA checks and full-route results are documented separately in
-[sensor validation](SENSOR_VALIDATION.md) and [planner validation](VALIDATION.md).
-A unit-test pass is not a full-route or real-road validation.
-
-Style checks, also from the parent workspace:
-
-```bash
-ruff check avlite-behavior-hdmap
-ruff format --check avlite-behavior-hdmap
-```
-
-## Limitations
-
-Dynamic light states and pedestrian observations in the sensor profile come
-from RGB/LiDAR. Lane topology, STOP locations, crossing polygons and signal-head
-geometry still come from the static map; the CARLA demo retains simulator ego
-localization. Missing or stale observations cause conservative stopping.
-
-The bundled model is CARLA-adapted. Real-road deployment, night/rain, arrow
-signals and calibration errors are not validated. Road lane changes and
-self-intersecting routes are unsupported; race passing covers scripted rivals,
-not arbitrary traffic. Behavior uses a Python state machine, not BehaviorTree.CPP.
+See [testing](docs/testing.md) for profile checks, parking scenarios and recorded
+results. The BasicSim examples use simulated observations. The camera model is
+CARLA-adapted; real-road operation and arbitrary race traffic remain unvalidated.
 
 ## Documentation
 
-- [Architecture and behavior](docs/architecture.md)
-- [RGB/LiDAR adapter and backend details](SENSOR_PERCEPTION.md)
-- [Independent perception package, model selection and extension API](SIGNAL_PACKAGE.md)
-- [Sensor validation and model limitations](SENSOR_VALIDATION.md)
-- [Planner and dispatcher validation](VALIDATION.md)
-- [Development history and earlier demo commands](docs/development-history.md)
+[Documentation index](docs/README.md): architecture, task API, perception,
+parking and experiment reports.
+
+## License
+
+[MIT](LICENSE).

@@ -163,7 +163,7 @@ c69_apps:
   c60_ros_distro: ''
   c60_selected_profile: hdmap-junctions
   c62_community_plugins:
-    avlite-behavior-hdmap: /path/to/avlite/avlite-behavior-hdmap
+    avlite-behavior-hdmap: /home/iaroslav/avlite/avlite-behavior-hdmap
     avlite-bridge-carla: avlite-bridge-carla
   c62_default_plugins:
   - p60_headless_mode
@@ -183,7 +183,7 @@ plugins:
     max_lateral_acceleration: 0.5
     pedestrian_margin: 1.5
     observation_max_age: 0.3
-    telemetry_directory: /path/to/avlite/logs/hdmap
+    telemetry_directory: /home/iaroslav/avlite/logs/hdmap
   avlite_bridge_carla:
     max_sensor_age: 0.5
     python_api: ''

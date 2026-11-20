@@ -1,0 +1,37 @@
+name: Community plugin compatibility
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  stock-avlite:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONNOUSERSITE: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      OMP_NUM_THREADS: "1"
+      MPLBACKEND: Agg
+      AVLITE_CONFIG_DIR: /tmp/avlite-community-check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install pinned core and plugin dependencies
+        run: |
+          python -m pip install 'avlite @ git+https://github.com/AV-Lab/avlite.git@1df512a3718d78a4d737e07178a9db03cf5d4f05'
+          python -m pip install -r requirements.txt pytest ruff
+      - name: Style and standalone tests
+        run: |
+          ruff check .
+          ruff format --check .
+          python -m pytest --rootdir=.. --import-mode=importlib -q tests
+      - name: Repeated road and race handovers
+        run: python tools/coordinator_demo.py --mode both --repeat 3 --output logs/coordinator.json
+      - name: Load generated profiles through AVLite
+        run: |
+          python tools/prepare_coordinator_profile.py --mode road --output /tmp/avlite-community-check/road.yaml
+          python tools/prepare_coordinator_profile.py --mode race --output /tmp/avlite-community-check/race.yaml
+          python tools/check_coordinator_profile.py --profile road --output logs/road-factory.json
+          python tools/check_coordinator_profile.py --profile race --output logs/race-factory.json
+      - name: Parking scenarios
+        run: python tools/check_parking.py --output logs/parking

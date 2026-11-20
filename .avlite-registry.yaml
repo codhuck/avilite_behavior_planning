@@ -1,4 +1,17 @@
 name: avlite-behavior-hdmap
-display_name: AVLite HD Map Behavior Planner
-min_avlite_version: 0.6.6
-dependency_notes: Use an OpenDRIVE .xodr map and LocalPlanningPipeline.
+display_name: AVLite Behavior Planning
+description: Task-based road/race planner selection, regulatory behavior and selectable parking.
+repository: https://github.com/codhuck/avilite_behavior_planning
+version: latest
+author: codhuck
+category:
+  - PlanningStrategy
+  - TaskStrategy
+  - PerceptionStrategy
+  - ControlStrategy
+  - ExecutionStrategy
+  - WorldBridge
+min_avlite_version: "0.6.7"
+require_ros: false
+dependency_notes: "BasicSim demo needs no ROS, CARLA or model download. Sensor experiments require a compatible CARLA bridge, server and detector weights. Use the plugin runtime adapters on stock AVLite."
+site_url: https://github.com/codhuck/avilite_behavior_planning#readme
