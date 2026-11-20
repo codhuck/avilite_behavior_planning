@@ -11,18 +11,32 @@ loads the package.
 
 | Path | Contents |
 | --- | --- |
-| `coordinator.py`, `switch_task.py` | Configuration selection and stopped handovers |
-| `hdmap_behavior.py`, `tree_planner.py`, `global_planner.py` | Road planning |
-| `race_behavior.py`, `race_traffic.py` | Race planning and scripted traffic |
-| `parking.py`, `parking_task.py` | Parking planner, controller and execution task |
-| `sensor_perception.py`, `avlite_signal_perception/` | AVLite detector and independent classifier package |
-| `runtime.py`, `commands.py` | Execution, control and simulation adapters |
-| `data/` | Routes, signal survey and coordination fixtures |
-| `tools/`, `tests/` | Scenario runners and regression tests |
+| `planning/` | Road and race strategies and planner dispatcher |
+| `parking/` | Parking planner/controller, search, occupancy and view selection |
+| `perception/` | Sensor detector, observation contracts and regulatory geometry |
+| `execution/` | Tasks, handovers, commands and runtime adapters |
+| `avlite_signal_perception/` | Independent traffic-light classifier package |
+| `profiles/`, `data/` | Settings, routes, signal survey and coordination fixtures |
+| `tools/`, `tests/` | Setup, scenario runners and regression tests |
+| `docs/validation/`, `docs/research/`, `docs/history/` | Results, study notes and earlier development records |
 
 The registry name is `avlite-behavior-hdmap`; the import namespace is
 `avlite.plugins.avlite_behavior_hdmap`. `requirements.txt` also installs the
 independent `avlite-signal-perception` Python package.
+
+## Python imports
+
+Import public strategies from the plugin root:
+
+```python
+from avlite.plugins.avlite_behavior_hdmap import ParkingTask, PlanningCoordinatorTask
+```
+
+Configuration class names and the recommended profile are unchanged. Internal
+modules now live in the directories above; for example, `coordinator.py` is
+`execution/coordinator.py` and `sensor_perception.py` is `perception/detector.py`.
+Scripts that imported these internal modules need the new paths. Restart AVLite
+after updating so Python does not retain modules from the previous layout.
 
 ## Runtime adapters
 

@@ -40,7 +40,26 @@ Use the same `AVLITE_CONFIG_DIR` for both commands if you override the default.
 The checker verifies the loaded plugin path, runs 60 ticks and checks that the
 vehicle moves. The CI workflow runs these checks against a pinned core revision.
 
-## Results — 20 November 2026
+## Package layout check — 20 November 2026
+
+The reorganized package was checked against the same unmodified AVLite core.
+
+| Check | Result |
+| --- | --- |
+| Standalone tests | 156 passed |
+| Related workspace tests, including sensor and classifier regressions | 176 passed |
+| Road/race handovers | 6/6 passed |
+| Parking scenarios | 18/18 passed |
+| Recommended, generated road and generated race profiles | 3/3 passed |
+| CLI help from outside the checkout | 33 commands passed |
+| Relative documentation links | 104 checked, none broken |
+
+Reports are in `logs/plugin_layout_20261120/` in the development workspace.
+The three added regressions cover default signal geometry after relocation,
+profile asset paths and nested-code snapshots. These checks did not launch a
+CARLA server or validate new driving behavior.
+
+## Community-plugin release — 20 November 2026
 
 Core: AVLite 0.6.7, commit `1df512a3718d78a4d737e07178a9db03cf5d4f05`.
 The core checkout was unchanged. The plugin was copied to a separate directory
@@ -66,7 +85,7 @@ workspace. `completion.json` lists the individual files and archive hash. The fu
 workspace suite was not completed: initial Tk checks lacked display access and
 subsequent runs exhausted disk space. The 124 related tests passed afterward.
 Interactive GUI acceptance and new live CARLA runs were outside this check.
-The hosted CI workflow has not run yet.
+The [hosted CI run for the community-plugin release](https://github.com/codhuck/avilite_behavior_planning/actions/runs/44646871260) also passed.
 
 ## CARLA and earlier experiments
 
@@ -74,11 +93,11 @@ CARLA runners require an idle server and the matching bridge. Some parking
 runners replace the map with a test pad; read their setup instructions first.
 Results depend on the recorded source revision and configuration.
 
-- [CARLA coordination](coordination-carla-validation.md)
-- [Sensor perception](../SENSOR_VALIDATION.md)
-- [Road and race runs](../VALIDATION.md)
-- [Sensor parking](sensor-parking-validation.md)
-- [Parking robustness](parking-robustness-validation.md)
+- [CARLA coordination](validation/coordination-carla-validation.md)
+- [Sensor perception](validation/perception.md)
+- [Road and race runs](validation/road-and-race.md)
+- [Sensor parking](validation/sensor-parking-validation.md)
+- [Parking robustness](validation/parking-robustness-validation.md)
 
 BasicSim results do not measure camera accuracy. The reported CARLA experiments
 use static surveyed geometry and simulator ego localization; real-road operation

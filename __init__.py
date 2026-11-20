@@ -1,37 +1,41 @@
 """OpenDRIVE regulatory-element behavior planning for AVLite."""
 
-from .carla_task import CarlaRegulatoryTask, SensorTelemetryTask
-from .coordinator import (
+from .execution.carla_task import CarlaRegulatoryTask, SensorTelemetryTask
+from .execution.coordinator import (
     PlanningConfiguration,
     PlanningCoordinatorTask,
     PlanningStrategyRejected,
     PlanningStrategySelected,
     SelectPlanningStrategy,
 )
-from .dispatcher import GlobalPlannerDispatcher, PlannerDispatcher
-from .global_planner import HDMapLaneFollowingPlanner
-from .hdmap_behavior import HDMapBehaviorPlanner, HDMapRuleVelocityPlanner, HDMapStopBehaviorPlanner
-from .parking import ParkingController, ParkingPlanner, ParkingRequest, ParkingType
-from .parking_task import ParkingObservation, ParkingTask
-from .race_behavior import RaceBehaviorPlanner, RacePathPlanner, RaceVelocityPlanner
-from .race_traffic import RaceTrafficTask
-from .regulatory import RegulatoryFeature, RegulatoryKind, extract_regulatory_features
-from .runtime import (
+from .execution.parking_task import ParkingObservation, ParkingTask
+from .execution.race_traffic import RaceTrafficTask
+from .execution.runtime import (
     BehaviorPlanningPipeline,
     BehaviorStanleyController,
     PlanningBasicSim,
     PlanningSyncExecuter,
 )
-from .sensor_perception import SensorRegulatoryDetector
-from .settings import PluginSettings
-from .switch_task import (
+from .execution.switch_task import (
     PerceptionSwitchTask,
     PlannerSwitchTask,
     SelectPerceptionStack,
     SelectPlanningStack,
 )
-from .tree_planner import HDMapBehaviorTreePlanner
-from .visibility_parking import VisibilityParkingPlanner
+from .parking.planner import ParkingController, ParkingPlanner, ParkingRequest, ParkingType
+from .parking.visibility import VisibilityParkingPlanner
+from .perception.detector import SensorRegulatoryDetector
+from .perception.regulatory import RegulatoryFeature, RegulatoryKind, extract_regulatory_features
+from .planning.dispatcher import GlobalPlannerDispatcher, PlannerDispatcher
+from .planning.global_planner import HDMapLaneFollowingPlanner
+from .planning.hdmap_behavior import (
+    HDMapBehaviorPlanner,
+    HDMapRuleVelocityPlanner,
+    HDMapStopBehaviorPlanner,
+)
+from .planning.race_behavior import RaceBehaviorPlanner, RacePathPlanner, RaceVelocityPlanner
+from .planning.tree_planner import HDMapBehaviorTreePlanner
+from .settings import PluginSettings
 
 __all__ = [
     "BehaviorPlanningPipeline",

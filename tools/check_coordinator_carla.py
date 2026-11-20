@@ -18,6 +18,8 @@ if not __name__.startswith("avlite.plugins."):
     from dataclasses import replace
     from pathlib import Path
 
+    from _sources import source_files
+
     PLUGIN = Path(__file__).resolve().parents[1]
     ROOT = PLUGIN.parent
     sys.path[:0] = [str(ROOT), str(PLUGIN)]
@@ -30,7 +32,6 @@ if not __name__.startswith("avlite.plugins."):
     from avlite.c40_execution.c49_settings import ExecutionSettings as Settings
     from avlite.c60_apps.c62_factory import executor_factory, load_stack_settings
     from avlite.c60_apps.c67_plugin_env import PluginEnv
-
     from profile_setup import write_profile
 
     def require_idle(client):
@@ -77,12 +78,12 @@ if not __name__.startswith("avlite.plugins."):
             detector = ex.perception._detector
             package = sys.modules[type(task).__module__.rsplit(".", 1)[0]]
             ex.world.get_ground_truth_perception_model = forbidden
-            sys.modules[package.__name__ + ".carla_task"].observe_carla = forbidden
+            sys.modules[package.__name__ + ".execution.carla_task"].observe_carla = forbidden
             assert {str(getattr(c, "name", c)) for c in Settings.c41_world_stack_capabilities} == {
                 "LOCALIZATION"
             }
             for obj, expected in (
-                (task, PLUGIN / "coordinator.py"),
+                (task, PLUGIN / "execution/coordinator.py"),
                 (ex.world, ROOT / "avlite-bridge-carla/carla_bridge.py"),
             ):
                 assert Path(sys.modules[type(obj).__module__].__file__).resolve() == expected
@@ -265,7 +266,7 @@ if not __name__.startswith("avlite.plugins."):
         result["sources"] = {
             str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
             for p in [
-                *PLUGIN.glob("*.py"),
+                *source_files(PLUGIN),
                 Path(__file__),
                 ROOT / "avlite-bridge-carla/carla_bridge.py",
             ]

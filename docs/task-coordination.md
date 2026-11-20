@@ -130,7 +130,7 @@ LiDAR points, valid calibration and bounded frame age. Asynchronous sensors need
 upstream synchronization. Signal association also requires an HD map, static
 signal-head geometry and an acquisition-aligned ego pose. Malformed, stale or
 missing inputs produce a stop; dynamic simulator queries are not used to fill
-missing observations. See [RGB/LiDAR perception](../SENSOR_PERCEPTION.md).
+missing observations. See [RGB/LiDAR perception](perception/sensors.md).
 
 `PerceptionSwitchTask` separately handles detector replacement. It requires a
 paused executor and finite speeds at most 0.02 m/s in both perception and bridge
@@ -139,6 +139,6 @@ state. Its API is described in [architecture](architecture.md#replacing-percepti
 ## Tests
 
 [Testing](testing.md) covers BasicSim handovers and profile loading.
-[CARLA coordination validation](coordination-carla-validation.md) records the
+[CARLA coordination validation](validation/coordination-carla-validation.md) records the
 sensor fault-injection runs. BasicSim checks exercise task integration;
 classifier accuracy is covered by the separate perception tests.

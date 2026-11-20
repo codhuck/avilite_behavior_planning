@@ -25,11 +25,11 @@ if not __name__.startswith("avlite.plugins."):
     ROOT = Path(__file__).resolve().parents[2]
     sys.path.insert(0, str(ROOT))
     package = types.ModuleType("visibility_experiment")
-    package.__path__ = [str(ROOT / "avlite-behavior-hdmap")]
+    package.__path__ = [str(Path(__file__).resolve().parents[1])]
     sys.modules[package.__name__] = package
-    parking = importlib.import_module(package.__name__ + ".parking")
-    active = importlib.import_module(package.__name__ + ".visibility_parking")
-    occupancy = importlib.import_module(package.__name__ + ".parking_occupancy")
+    parking = importlib.import_module(package.__name__ + ".parking.planner")
+    active = importlib.import_module(package.__name__ + ".parking.visibility")
+    occupancy = importlib.import_module(package.__name__ + ".parking.occupancy")
     from avlite.c10_perception.c11_perception_model import EgoState, PerceptionModel
     from avlite.c20_planning.c21_planning_model import GlobalPlan
     from avlite.c40_execution.c46_basic_sim import BasicSim

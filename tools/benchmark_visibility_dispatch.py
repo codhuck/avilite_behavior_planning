@@ -20,7 +20,11 @@ if not __name__.startswith("avlite.plugins."):
 
     PLUGIN = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(PLUGIN))
-    from visibility_dispatch import (
+    from _bootstrap import load_plugin
+
+    load_plugin()
+
+    from avlite_coordination_demo.parking.dispatch import (
         Maneuver,
         VisibilityDispatcher,
         VisibilitySnapshot,

@@ -20,12 +20,15 @@ if not __name__.startswith("avlite.plugins."):
     PLUGIN = Path(__file__).resolve().parents[1]
     sys.path[:0] = [str(PLUGIN), str(PLUGIN.parent)]
     import carla
+    from _bootstrap import load_plugin
     from avlite.c10_perception.c11_perception_model import EgoState
     from avlite.c50_common.c52_world_sensor_datatypes import Lidar
     from check_parking_carla import PAD
     from shapely.geometry import box
 
-    from parking_occupancy import LidarParkingOccupancy
+    load_plugin()
+
+    from avlite_coordination_demo.parking.occupancy import LidarParkingOccupancy
 
     def main():
         parser = argparse.ArgumentParser(description=__doc__)

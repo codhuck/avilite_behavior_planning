@@ -75,7 +75,7 @@ See [task coordination](docs/task-coordination.md) for the API.
 For camera/LiDAR perception, run `python install.py` to install and check the
 model assets. `python install.py --check` verifies an existing installation.
 The CARLA demo requires a matching server, Python API and bridge. Setup and
-classifier options are in [SIGNAL_PACKAGE.md](SIGNAL_PACKAGE.md).
+classifier options are in [classifier setup](docs/perception/classifier.md).
 
 Parking uses `ParkingTask`, `ParkingPlanner` and `ParkingController`. Select the
 type through the task API; [parking.md](docs/parking.md) describes the scene
@@ -96,6 +96,21 @@ python tools/coordinator_demo.py --mode both --repeat 3 --output logs/coordinato
 See [testing](docs/testing.md) for profile checks, parking scenarios and recorded
 results. The BasicSim examples use simulated observations. The camera model is
 CARLA-adapted; real-road operation and arbitrary race traffic remain unvalidated.
+
+## Repository layout
+
+| Directory | Contents |
+| --- | --- |
+| `planning/` | Road and race planners, behavior tree and dispatcher |
+| `parking/` | Parking planner/controller, search, occupancy and visibility |
+| `perception/` | Regulatory geometry, observations and sensor detector |
+| `execution/` | Coordination tasks, handovers and runtime adapters |
+| `avlite_signal_perception/` | Separately installable traffic-light classifier |
+| `profiles/`, `data/` | Example settings, routes and map fixtures |
+| `tests/`, `tools/` | Tests, scenario runners and offline analysis |
+| `docs/` | Setup guides, API reference and validation reports |
+
+AVLite loads `__init__.py` and `settings.py` from the repository root.
 
 ## Documentation
 

@@ -72,7 +72,9 @@ def test_invalid_timestep_does_not_move_vehicle(demo, dt):
         pm=PerceptionModel(ego_vehicle=ego),
         setting=ExecutionSettingsSchema(c46_npc_control=False),
     )
-    command = sys.modules[demo.plugin.__name__ + ".commands"].DirectionalAckermannCommand()
+    command = sys.modules[
+        demo.plugin.__name__ + ".execution.commands"
+    ].DirectionalAckermannCommand()
     with pytest.raises(ValueError):
         world.control_ego_state(command, dt)
     assert (ego.x, ego.y, ego.velocity) == (0, 0, 1)
@@ -88,3 +90,51 @@ def test_speed_limit_applies_to_reference(demo, monkeypatch):
         assert max(plan.as_trajectory().velocity) <= 0.7
     finally:
         ex.stop()
+
+
+def test_default_signal_geometry_is_independent_of_cwd(demo, tmp_path, monkeypatch):
+    import json
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(demo.plugin.PluginSettings, "sensor_signal_geometry", "")
+    detector = demo.plugin.SensorRegulatoryDetector(
+        detector=lambda image: [], signal_backend="carla_aperture"
+    )
+    expected = json.loads((demo.PLUGIN / "data/Town10HD_Opt_signals.json").read_text())
+    assert detector.geometry == expected
+    assert detector.geometry
+
+
+def test_profile_generator_resolves_assets_from_tools_directory(tmp_path, monkeypatch):
+    root = Path(__file__).parents[1]
+    spec = importlib.util.spec_from_file_location("layout_profile", root / "tools/profile_setup.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    road = tmp_path / "road.xodr"
+    road.write_text("<OpenDRIVE/>")
+    bridge = tmp_path / "bridge"
+    bridge.mkdir()
+    (bridge / "__init__.py").touch()
+    monkeypatch.chdir(tmp_path)
+    output = module.write_profile(tmp_path / "profile.yaml", road, bridge)
+    profile = yaml.safe_load(output.read_text())
+    assert profile["c69_apps"]["c62_community_plugins"]["avlite-behavior-hdmap"] == str(root)
+    assert Path(profile["c40_execution"]["c40_global_trajectory"]).is_file()
+    assert Path(profile["plugins"]["avlite_behavior_hdmap"]["sensor_signal_geometry"]).is_file()
+
+
+def test_evidence_snapshot_includes_nested_code_without_run_artifacts(tmp_path):
+    spec = importlib.util.spec_from_file_location(
+        "layout_sources", Path(__file__).parents[1] / "tools/_sources.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    included = ["__init__.py", "planning/road.py", "parking/search.py", "tools/check.py"]
+    excluded = ["logs/snapshot/old.py", ".venv/lib/dependency.py", "parking/__pycache__/old.py"]
+    for relative in included + excluded:
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+    assert {p.relative_to(tmp_path).as_posix() for p in module.source_files(tmp_path)} == set(
+        included
+    )

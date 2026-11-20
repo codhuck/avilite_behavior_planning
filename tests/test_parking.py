@@ -22,7 +22,7 @@ def parking():
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
-    return module.parking
+    return module.parking.planner
 
 
 @pytest.fixture
@@ -133,7 +133,7 @@ def test_zero_control_timestep_rejected(planner, parking):
 
 
 def test_basic_sim_reverse_and_direction_interlock(parking):
-    plugin = sys.modules[parking.__package__]
+    plugin = sys.modules[parking.__package__.rsplit(".", 1)[0]]
     DirectionalAckermannCommand = parking.DirectionalAckermannCommand
     BasicSim = plugin.PlanningBasicSim
     from avlite.c40_execution.c49_settings import ExecutionSettingsSchema

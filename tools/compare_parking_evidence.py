@@ -18,11 +18,18 @@ if not __name__.startswith("avlite.plugins."):
 
     PLUGIN = Path(__file__).resolve().parents[1]
     sys.path[:0] = [str(PLUGIN), str(PLUGIN.parent)]
+    from _bootstrap import load_plugin
     from avlite.c10_perception.c11_perception_model import EgoState
     from avlite.c50_common.c52_world_sensor_datatypes import Lidar
 
-    from parking_occupancy import FusedLidarParkingOccupancy
-    from visibility_dispatch import Maneuver, VisibilityDispatcher, VisibilitySnapshot
+    load_plugin()
+
+    from avlite_coordination_demo.parking.dispatch import (
+        Maneuver,
+        VisibilityDispatcher,
+        VisibilitySnapshot,
+    )
+    from avlite_coordination_demo.parking.occupancy import FusedLidarParkingOccupancy
 
     def load_frame(directory, mode, step, dimensions):
         """Never combine initial and event clouds from different acquisitions."""

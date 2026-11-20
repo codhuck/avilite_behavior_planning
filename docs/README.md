@@ -7,31 +7,31 @@
 - [Architecture](architecture.md)
 - [Task coordination](task-coordination.md)
 - [Road behavior tree](behavior-tree.md)
-- [Traffic-light classifier package](../SIGNAL_PACKAGE.md)
-- [RGB/LiDAR detector](../SENSOR_PERCEPTION.md)
+- [Traffic-light classifier package](perception/classifier.md)
+- [RGB/LiDAR detector](perception/sensors.md)
 - [Parking](parking.md)
 - [Sensor-supported parking](sensor-supported-parking.md)
 
 ## Tests and experiments
 
 - [Test commands and compatibility results](testing.md)
-- [Road and race validation](../VALIDATION.md)
-- [Perception validation](../SENSOR_VALIDATION.md)
-- [CARLA coordination](coordination-carla-validation.md)
-- [Sensor parking validation](sensor-parking-validation.md)
-- [Parking robustness](parking-robustness-validation.md)
-- [Visibility-aware parking study](itsc-study.md)
-- [Finite-ray view planning](finite-ray-view-planning.md)
-- [Task-aware view audit](task-aware-view-audit.md)
+- [Road and race validation](validation/road-and-race.md)
+- [Perception validation](validation/perception.md)
+- [CARLA coordination](validation/coordination-carla-validation.md)
+- [Sensor parking validation](validation/sensor-parking-validation.md)
+- [Parking robustness](validation/parking-robustness-validation.md)
+- [Visibility-aware parking study](research/itsc-study.md)
+- [Finite-ray view planning](research/finite-ray-view-planning.md)
+- [Task-aware view audit](research/task-aware-view-audit.md)
 
 ## Development records
 
 These notes describe earlier revisions and workspace-specific tools. Use the
 setup guides above for the current standalone plugin.
 
-- [Development history](development-history.md)
-- [Meeting follow-up](meeting-followup.md)
-- [Requirements status](requirements-status.md)
-- [Earlier coordination checks](coordination-validation.md)
-- [Matching-core source bundles](source-bundle.md)
-- [Earlier validation](../VALIDATION_PREVIOUS.md)
+- [Development history](history/development-history.md)
+- [Meeting follow-up](history/meeting-followup.md)
+- [Requirements status](history/requirements-status.md)
+- [Earlier coordination checks](history/coordination-validation.md)
+- [Matching-core source bundles](history/source-bundle.md)
+- [Earlier validation](history/validation-previous.md)

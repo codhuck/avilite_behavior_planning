@@ -17,12 +17,15 @@ if not __name__.startswith("avlite.plugins."):
     import matplotlib.pyplot as plt
     import numpy as np
     import shapely
+    from _bootstrap import load_plugin
     from avlite.c50_common.c52_world_sensor_datatypes import Lidar
     from replay_scan_views import load_task
     from shapely.geometry import box
 
-    from parking_occupancy import FusedLidarParkingOccupancy
-    from scan_visibility import ScanVisibility
+    load_plugin()
+
+    from avlite_coordination_demo.parking.occupancy import FusedLidarParkingOccupancy
+    from avlite_coordination_demo.parking.scan import ScanVisibility
 
     def geometry(ax, geom, color, alpha=1):
         if geom.is_empty:

@@ -1,6 +1,6 @@
 # Sensor-supported parking arbitration
 
-The later [robustness validation](parking-robustness-validation.md) records new
+The later [robustness validation](validation/parking-robustness-validation.md) records new
 geometry configurations, moving pedestrians, range noise, retained failures and
 subsequent fixes. Results below describe the earlier static experiments.
 
@@ -150,7 +150,7 @@ nonzero overlap is reported even when a drive avoids collisions.
 
 ## Evaluation status
 
-The [paired study](itsc-study.md#completed-paired-series-13-november-2026)
+The [paired study](research/itsc-study.md#completed-paired-series-13-november-2026)
 completed 21 CARLA trials covering seven component policies and three parking
 geometries, with fixed moving-walker trajectories, 0.01 m range noise and 0.02
 ray dropout. Complete policy: 3/3; full-segment release: 0/3; no-observation: 3/3.
@@ -180,7 +180,7 @@ obstacle runs and ideal 2D scanner runs cannot validate sensor-only performance.
 
 ## Evidence and limits
 
-See [sensor parking validation](sensor-parking-validation.md) for the recorded
+See [sensor parking validation](validation/sensor-parking-validation.md) for the recorded
 acceptance results, development failures and reproduction commands. Static
 neighbouring cars occlude the bay, but there are no moving pedestrians in these
 earlier LiDAR parking drives. Ground-truth localization, surveyed bay geometry and

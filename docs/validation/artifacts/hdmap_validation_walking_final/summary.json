@@ -1,0 +1,188 @@
+[
+  {
+    "scenario": "junctions",
+    "repeat": 1,
+    "goal_reached": true,
+    "sim_seconds": 215.70000321418047,
+    "goal_error": 0.3866737237301428,
+    "max_lateral_error": 0.035347138084958665,
+    "violations": [],
+    "collisions": [],
+    "expected_stops": [],
+    "completed_stops": [],
+    "light_holds": [
+      "944",
+      "949",
+      "954",
+      "961"
+    ],
+    "pedestrian_hold": true,
+    "rules": [
+      {
+        "id": "954",
+        "kind": "traffic_light",
+        "road": "515",
+        "s": 28.63728697136976,
+        "reference": true
+      },
+      {
+        "id": "961",
+        "kind": "traffic_light",
+        "road": "795",
+        "s": 175.75827089841846,
+        "reference": true
+      },
+      {
+        "id": "1135",
+        "kind": "crosswalk",
+        "road": "795",
+        "s": 179.4131359624281,
+        "reference": false
+      },
+      {
+        "id": "1133",
+        "kind": "crosswalk",
+        "road": "787",
+        "s": 202.28138380320055,
+        "reference": false
+      },
+      {
+        "id": "949",
+        "kind": "traffic_light",
+        "road": "296",
+        "s": 232.63826740496063,
+        "reference": true
+      },
+      {
+        "id": "1148",
+        "kind": "crosswalk",
+        "road": "466",
+        "s": 263.6709793045426,
+        "reference": false
+      },
+      {
+        "id": "944",
+        "kind": "traffic_light",
+        "road": "105",
+        "s": 311.39318060549374,
+        "reference": true
+      },
+      {
+        "id": "1140",
+        "kind": "crosswalk",
+        "road": "24",
+        "s": 314.53705188908293,
+        "reference": false
+      },
+      {
+        "id": "1142",
+        "kind": "crosswalk",
+        "road": "89",
+        "s": 342.22603558325454,
+        "reference": false
+      }
+    ],
+    "rule_checks_passed": true,
+    "tracking_passed": true,
+    "passed": true,
+    "independent_stop_audit": {},
+    "walking_pedestrian": {
+      "spawned": true,
+      "started": true,
+      "cleared": true
+    }
+  },
+  {
+    "scenario": "junctions",
+    "repeat": 2,
+    "goal_reached": true,
+    "sim_seconds": 213.60000318288803,
+    "goal_error": 0.3815020238858008,
+    "max_lateral_error": 0.03456032764793344,
+    "violations": [],
+    "collisions": [],
+    "expected_stops": [],
+    "completed_stops": [],
+    "light_holds": [
+      "944",
+      "949",
+      "954",
+      "961"
+    ],
+    "pedestrian_hold": true,
+    "rules": [
+      {
+        "id": "954",
+        "kind": "traffic_light",
+        "road": "515",
+        "s": 28.63728697136976,
+        "reference": true
+      },
+      {
+        "id": "961",
+        "kind": "traffic_light",
+        "road": "795",
+        "s": 175.75827089841846,
+        "reference": true
+      },
+      {
+        "id": "1135",
+        "kind": "crosswalk",
+        "road": "795",
+        "s": 179.4131359624281,
+        "reference": false
+      },
+      {
+        "id": "1133",
+        "kind": "crosswalk",
+        "road": "787",
+        "s": 202.28138380320055,
+        "reference": false
+      },
+      {
+        "id": "949",
+        "kind": "traffic_light",
+        "road": "296",
+        "s": 232.63826740496063,
+        "reference": true
+      },
+      {
+        "id": "1148",
+        "kind": "crosswalk",
+        "road": "466",
+        "s": 263.6709793045426,
+        "reference": false
+      },
+      {
+        "id": "944",
+        "kind": "traffic_light",
+        "road": "105",
+        "s": 311.39318060549374,
+        "reference": true
+      },
+      {
+        "id": "1140",
+        "kind": "crosswalk",
+        "road": "24",
+        "s": 314.53705188908293,
+        "reference": false
+      },
+      {
+        "id": "1142",
+        "kind": "crosswalk",
+        "road": "89",
+        "s": 342.22603558325454,
+        "reference": false
+      }
+    ],
+    "rule_checks_passed": true,
+    "tracking_passed": true,
+    "passed": true,
+    "independent_stop_audit": {},
+    "walking_pedestrian": {
+      "spawned": true,
+      "started": true,
+      "cleared": true
+    }
+  }
+]

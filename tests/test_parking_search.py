@@ -11,7 +11,7 @@ from shapely.geometry import box
 
 def test_search_is_rigid_transform_equivariant():
     spec = importlib.util.spec_from_file_location(
-        "parking_search_test", Path(__file__).parents[1] / "parking_search.py"
+        "parking_search_test", Path(__file__).parents[1] / "parking/search.py"
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -46,7 +46,7 @@ def test_search_is_rigid_transform_equivariant():
 
 def test_near_goal_refinement_failure_keeps_expanding():
     spec = importlib.util.spec_from_file_location(
-        "parking_search_near_test", Path(__file__).parents[1] / "parking_search.py"
+        "parking_search_near_test", Path(__file__).parents[1] / "parking/search.py"
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

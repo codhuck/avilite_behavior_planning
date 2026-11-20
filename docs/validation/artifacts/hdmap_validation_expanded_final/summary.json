@@ -1,0 +1,499 @@
+[
+  {
+    "scenario": "stop_west",
+    "repeat": 1,
+    "goal_reached": true,
+    "sim_seconds": 320.9500047825277,
+    "goal_error": 0.7014833550942857,
+    "max_lateral_error": 0.04441816340740967,
+    "violations": [],
+    "collisions": [],
+    "expected_stops": [
+      "947"
+    ],
+    "completed_stops": [
+      "947"
+    ],
+    "light_holds": [
+      "949",
+      "954",
+      "959",
+      "961"
+    ],
+    "pedestrian_hold": true,
+    "rules": [
+      {
+        "id": "1144",
+        "kind": "crosswalk",
+        "road": "712",
+        "s": 1.979045473843184,
+        "reference": false
+      },
+      {
+        "id": "947",
+        "kind": "stop_sign",
+        "road": "160",
+        "s": 39.23221021029675,
+        "reference": true
+      },
+      {
+        "id": "1146",
+        "kind": "crosswalk",
+        "road": "152",
+        "s": 51.78849549470646,
+        "reference": false
+      },
+      {
+        "id": "1143",
+        "kind": "crosswalk",
+        "road": "843",
+        "s": 75.43251871361215,
+        "reference": false
+      },
+      {
+        "id": "959",
+        "kind": "traffic_light",
+        "road": "608",
+        "s": 118.85096655737638,
+        "reference": true
+      },
+      {
+        "id": "1136",
+        "kind": "crosswalk",
+        "road": "597",
+        "s": 121.22528508769201,
+        "reference": false
+      },
+      {
+        "id": "1137",
+        "kind": "crosswalk",
+        "road": "608",
+        "s": 139.33320781652816,
+        "reference": false
+      },
+      {
+        "id": "954",
+        "kind": "traffic_light",
+        "road": "515",
+        "s": 351.4125674897635,
+        "reference": true
+      },
+      {
+        "id": "961",
+        "kind": "traffic_light",
+        "road": "795",
+        "s": 498.5335509481826,
+        "reference": true
+      },
+      {
+        "id": "1135",
+        "kind": "crosswalk",
+        "road": "795",
+        "s": 502.18841601219236,
+        "reference": false
+      },
+      {
+        "id": "1133",
+        "kind": "crosswalk",
+        "road": "787",
+        "s": 525.0566399565963,
+        "reference": false
+      },
+      {
+        "id": "949",
+        "kind": "traffic_light",
+        "road": "255",
+        "s": 555.2563081645235,
+        "reference": true
+      }
+    ],
+    "rule_checks_passed": true,
+    "tracking_passed": true,
+    "passed": true,
+    "independent_stop_audit": {
+      "947": {
+        "continuous_seconds": 2.7000000402331352,
+        "passed": true
+      }
+    }
+  },
+  {
+    "scenario": "stop_west",
+    "repeat": 2,
+    "goal_reached": true,
+    "sim_seconds": 311.00000463426113,
+    "goal_error": 0.8824607985242194,
+    "max_lateral_error": 0.043819526379876524,
+    "violations": [],
+    "collisions": [],
+    "expected_stops": [
+      "947"
+    ],
+    "completed_stops": [
+      "947"
+    ],
+    "light_holds": [
+      "954",
+      "959",
+      "961"
+    ],
+    "pedestrian_hold": true,
+    "rules": [
+      {
+        "id": "1144",
+        "kind": "crosswalk",
+        "road": "712",
+        "s": 1.979045473843184,
+        "reference": false
+      },
+      {
+        "id": "947",
+        "kind": "stop_sign",
+        "road": "160",
+        "s": 39.23221021029675,
+        "reference": true
+      },
+      {
+        "id": "1146",
+        "kind": "crosswalk",
+        "road": "152",
+        "s": 51.78849549470646,
+        "reference": false
+      },
+      {
+        "id": "1143",
+        "kind": "crosswalk",
+        "road": "843",
+        "s": 75.43251871361215,
+        "reference": false
+      },
+      {
+        "id": "959",
+        "kind": "traffic_light",
+        "road": "608",
+        "s": 118.85096655737638,
+        "reference": true
+      },
+      {
+        "id": "1136",
+        "kind": "crosswalk",
+        "road": "597",
+        "s": 121.22528508769201,
+        "reference": false
+      },
+      {
+        "id": "1137",
+        "kind": "crosswalk",
+        "road": "608",
+        "s": 139.33320781652816,
+        "reference": false
+      },
+      {
+        "id": "954",
+        "kind": "traffic_light",
+        "road": "515",
+        "s": 351.4125674897635,
+        "reference": true
+      },
+      {
+        "id": "961",
+        "kind": "traffic_light",
+        "road": "795",
+        "s": 498.5335509481826,
+        "reference": true
+      },
+      {
+        "id": "1135",
+        "kind": "crosswalk",
+        "road": "795",
+        "s": 502.18841601219236,
+        "reference": false
+      },
+      {
+        "id": "1133",
+        "kind": "crosswalk",
+        "road": "787",
+        "s": 525.0566399565963,
+        "reference": false
+      },
+      {
+        "id": "949",
+        "kind": "traffic_light",
+        "road": "255",
+        "s": 555.2563081645235,
+        "reference": true
+      }
+    ],
+    "rule_checks_passed": true,
+    "tracking_passed": true,
+    "passed": true,
+    "independent_stop_audit": {
+      "947": {
+        "continuous_seconds": 2.7000000402331352,
+        "passed": true
+      }
+    }
+  },
+  {
+    "scenario": "stop_east",
+    "repeat": 1,
+    "goal_reached": true,
+    "sim_seconds": 63.05000093951821,
+    "goal_error": 0.3767452311011732,
+    "max_lateral_error": 0.047904345027378135,
+    "violations": [],
+    "collisions": [],
+    "expected_stops": [
+      "946"
+    ],
+    "completed_stops": [
+      "946"
+    ],
+    "light_holds": [],
+    "pedestrian_hold": false,
+    "rules": [
+      {
+        "id": "946",
+        "kind": "stop_sign",
+        "road": "150",
+        "s": 45.47035184020023,
+        "reference": true
+      },
+      {
+        "id": "1144",
+        "kind": "crosswalk",
+        "road": "712",
+        "s": 105.0177268110757,
+        "reference": false
+      }
+    ],
+    "rule_checks_passed": true,
+    "tracking_passed": true,
+    "passed": true,
+    "independent_stop_audit": {
+      "946": {
+        "continuous_seconds": 1.5000000223517418,
+        "passed": true
+      }
+    }
+  },
+  {
+    "scenario": "stop_east",
+    "repeat": 2,
+    "goal_reached": true,
+    "sim_seconds": 63.05000093951821,
+    "goal_error": 0.37580312266021476,
+    "max_lateral_error": 0.0451950551778907,
+    "violations": [],
+    "collisions": [],
+    "expected_stops": [
+      "946"
+    ],
+    "completed_stops": [
+      "946"
+    ],
+    "light_holds": [],
+    "pedestrian_hold": false,
+    "rules": [
+      {
+        "id": "946",
+        "kind": "stop_sign",
+        "road": "150",
+        "s": 45.47035184020023,
+        "reference": true
+      },
+      {
+        "id": "1144",
+        "kind": "crosswalk",
+        "road": "712",
+        "s": 105.0177268110757,
+        "reference": false
+      }
+    ],
+    "rule_checks_passed": true,
+    "tracking_passed": true,
+    "passed": true,
+    "independent_stop_audit": {
+      "946": {
+        "continuous_seconds": 2.7000000402331352,
+        "passed": true
+      }
+    }
+  },
+  {
+    "scenario": "junctions",
+    "repeat": 1,
+    "goal_reached": true,
+    "sim_seconds": 204.90000305324793,
+    "goal_error": 0.36291511598662257,
+    "max_lateral_error": 0.03481881199742863,
+    "violations": [],
+    "collisions": [],
+    "expected_stops": [],
+    "completed_stops": [],
+    "light_holds": [
+      "944",
+      "949",
+      "954",
+      "961"
+    ],
+    "pedestrian_hold": true,
+    "rules": [
+      {
+        "id": "954",
+        "kind": "traffic_light",
+        "road": "515",
+        "s": 28.63728697136976,
+        "reference": true
+      },
+      {
+        "id": "961",
+        "kind": "traffic_light",
+        "road": "795",
+        "s": 175.75827089841846,
+        "reference": true
+      },
+      {
+        "id": "1135",
+        "kind": "crosswalk",
+        "road": "795",
+        "s": 179.4131359624281,
+        "reference": false
+      },
+      {
+        "id": "1133",
+        "kind": "crosswalk",
+        "road": "787",
+        "s": 202.28138380320055,
+        "reference": false
+      },
+      {
+        "id": "949",
+        "kind": "traffic_light",
+        "road": "296",
+        "s": 232.63826740496063,
+        "reference": true
+      },
+      {
+        "id": "1148",
+        "kind": "crosswalk",
+        "road": "466",
+        "s": 263.6709793045426,
+        "reference": false
+      },
+      {
+        "id": "944",
+        "kind": "traffic_light",
+        "road": "105",
+        "s": 311.39318060549374,
+        "reference": true
+      },
+      {
+        "id": "1140",
+        "kind": "crosswalk",
+        "road": "24",
+        "s": 314.53705188908293,
+        "reference": false
+      },
+      {
+        "id": "1142",
+        "kind": "crosswalk",
+        "road": "89",
+        "s": 342.22603558325454,
+        "reference": false
+      }
+    ],
+    "rule_checks_passed": true,
+    "tracking_passed": true,
+    "passed": true,
+    "independent_stop_audit": {}
+  },
+  {
+    "scenario": "junctions",
+    "repeat": 2,
+    "goal_reached": true,
+    "sim_seconds": 204.90000305324793,
+    "goal_error": 0.36587909533082225,
+    "max_lateral_error": 0.03552127013496558,
+    "violations": [],
+    "collisions": [],
+    "expected_stops": [],
+    "completed_stops": [],
+    "light_holds": [
+      "944",
+      "949",
+      "954",
+      "961"
+    ],
+    "pedestrian_hold": true,
+    "rules": [
+      {
+        "id": "954",
+        "kind": "traffic_light",
+        "road": "515",
+        "s": 28.63728697136976,
+        "reference": true
+      },
+      {
+        "id": "961",
+        "kind": "traffic_light",
+        "road": "795",
+        "s": 175.75827089841846,
+        "reference": true
+      },
+      {
+        "id": "1135",
+        "kind": "crosswalk",
+        "road": "795",
+        "s": 179.4131359624281,
+        "reference": false
+      },
+      {
+        "id": "1133",
+        "kind": "crosswalk",
+        "road": "787",
+        "s": 202.28138380320055,
+        "reference": false
+      },
+      {
+        "id": "949",
+        "kind": "traffic_light",
+        "road": "296",
+        "s": 232.63826740496063,
+        "reference": true
+      },
+      {
+        "id": "1148",
+        "kind": "crosswalk",
+        "road": "466",
+        "s": 263.6709793045426,
+        "reference": false
+      },
+      {
+        "id": "944",
+        "kind": "traffic_light",
+        "road": "105",
+        "s": 311.39318060549374,
+        "reference": true
+      },
+      {
+        "id": "1140",
+        "kind": "crosswalk",
+        "road": "24",
+        "s": 314.53705188908293,
+        "reference": false
+      },
+      {
+        "id": "1142",
+        "kind": "crosswalk",
+        "road": "89",
+        "s": 342.22603558325454,
+        "reference": false
+      }
+    ],
+    "rule_checks_passed": true,
+    "tracking_passed": true,
+    "passed": true,
+    "independent_stop_audit": {}
+  }
+]

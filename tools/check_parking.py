@@ -30,7 +30,7 @@ if not __name__.startswith("avlite.plugins."):
     ParkingPlanner = plugin.ParkingPlanner
     ParkingRequest = plugin.ParkingRequest
     ParkingType = plugin.ParkingType
-    angle_error = sys.modules[plugin.__name__ + ".parking"].angle_error
+    angle_error = sys.modules[plugin.__name__ + ".parking.planner"].angle_error
 
     def run_scenario(
         name,

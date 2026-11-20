@@ -48,7 +48,7 @@ def main():
         result[name] = {"path": str(path), "sha256": digest(path)}
     create_classifier("trained_rgb")
     if args.profile_output:
-        from profile_setup import write_profile
+        from tools.profile_setup import write_profile
 
         result["profile"] = str(
             write_profile(

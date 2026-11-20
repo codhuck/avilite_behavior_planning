@@ -37,7 +37,7 @@ if not __name__.startswith("avlite.plugins."):
         a = p.parse_args()
         if a.output.exists():
             raise ValueError("Use a new output")
-        paths = [a.before, PLUGIN / "parking_occupancy.py"]
+        paths = [a.before, PLUGIN / "parking/occupancy.py"]
         modules = [load(path, f"occupancy_comparison_{i}") for i, path in enumerate(paths)]
         rows = []
         inputs = []

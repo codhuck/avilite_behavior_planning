@@ -205,6 +205,6 @@ not detection recall across varied obstacles.
 The six successful CARLA drives documented above still use simulator obstacle
 geometry. They must not be reported as six sensor-only parking drives. Subsequent multi-sensor work is described in
 [sensor-supported parking](sensor-supported-parking.md) and its
-[validation record](sensor-parking-validation.md). It adds calibrated fusion,
+[validation record](validation/sensor-parking-validation.md). It adds calibrated fusion,
 speed/prefix arbitration and closed-loop drives for all three types. Unsurveyed
 space recognition and sensor parking with moving pedestrians remain unvalidated.

@@ -14,7 +14,7 @@ from shapely.geometry import Point, box
 @pytest.fixture
 def provider():
     spec = importlib.util.spec_from_file_location(
-        "parking_occupancy_test", Path(__file__).parents[1] / "parking_occupancy.py"
+        "parking_occupancy_test", Path(__file__).parents[1] / "parking/occupancy.py"
     )
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -87,7 +87,7 @@ def test_unknown_clock_or_ground_blocks(provider, now, ground):
 
 def fused_provider():
     spec = importlib.util.spec_from_file_location(
-        "parking_fusion_tests", Path(__file__).parents[1] / "parking_occupancy.py"
+        "parking_fusion_tests", Path(__file__).parents[1] / "parking/occupancy.py"
     )
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module

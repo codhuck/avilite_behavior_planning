@@ -1,0 +1,7 @@
+{
+  "sim_time": 2.000000000000001,
+  "lights": 15,
+  "telemetry": "/home/iaroslav/avlite/logs/hdmap/drive_20261105T094336Z_f31ae2",
+  "state": "APPROACH_STOP",
+  "passed": true
+}

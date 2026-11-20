@@ -1,0 +1,95 @@
+{
+  "passed": true,
+  "runs": [
+    {
+      "repeat": 1,
+      "selection": {
+        "previous": "PlannerDispatcher",
+        "mode": "race",
+        "global_planner": "GlobalCenterlineRacePlanner",
+        "stages": [
+          "RaceBehaviorPlanner",
+          "RacePathPlanner",
+          "RaceVelocityPlanner"
+        ]
+      },
+      "initial_selection": {
+        "previous": "ReferencePathPlanner",
+        "mode": "race",
+        "global_planner": "GlobalCenterlineRacePlanner",
+        "stages": [
+          "RaceBehaviorPlanner",
+          "RacePathPlanner",
+          "RaceVelocityPlanner"
+        ]
+      },
+      "rejected_moving": true,
+      "replaced_again": true,
+      "resumed_distance": 49.32381643586784,
+      "sim_seconds": 32.55000000000029,
+      "displacement": 100.56044295639695,
+      "speed": 5.207946624823854,
+      "passed": true
+    },
+    {
+      "repeat": 2,
+      "selection": {
+        "previous": "PlannerDispatcher",
+        "mode": "race",
+        "global_planner": "GlobalCenterlineRacePlanner",
+        "stages": [
+          "RaceBehaviorPlanner",
+          "RacePathPlanner",
+          "RaceVelocityPlanner"
+        ]
+      },
+      "initial_selection": {
+        "previous": "ReferencePathPlanner",
+        "mode": "race",
+        "global_planner": "GlobalCenterlineRacePlanner",
+        "stages": [
+          "RaceBehaviorPlanner",
+          "RacePathPlanner",
+          "RaceVelocityPlanner"
+        ]
+      },
+      "rejected_moving": true,
+      "replaced_again": true,
+      "resumed_distance": 49.32381643586784,
+      "sim_seconds": 32.55000000000029,
+      "displacement": 100.56044295639695,
+      "speed": 5.207946624823854,
+      "passed": true
+    },
+    {
+      "repeat": 3,
+      "selection": {
+        "previous": "PlannerDispatcher",
+        "mode": "race",
+        "global_planner": "GlobalCenterlineRacePlanner",
+        "stages": [
+          "RaceBehaviorPlanner",
+          "RacePathPlanner",
+          "RaceVelocityPlanner"
+        ]
+      },
+      "initial_selection": {
+        "previous": "ReferencePathPlanner",
+        "mode": "race",
+        "global_planner": "GlobalCenterlineRacePlanner",
+        "stages": [
+          "RaceBehaviorPlanner",
+          "RacePathPlanner",
+          "RaceVelocityPlanner"
+        ]
+      },
+      "rejected_moving": true,
+      "replaced_again": true,
+      "resumed_distance": 49.32381643586784,
+      "sim_seconds": 32.55000000000029,
+      "displacement": 100.56044295639695,
+      "speed": 5.207946624823854,
+      "passed": true
+    }
+  ]
+}

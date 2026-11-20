@@ -47,7 +47,7 @@ if not __name__.startswith("avlite.plugins."):
                 t for t in ex.task_runner.tasks if type(t).__name__ == "PlanningCoordinatorTask"
             )
             source = Path(sys.modules[type(task).__module__].__file__).resolve()
-            assert source == PLUGIN / "coordinator.py", source
+            assert source == PLUGIN / "execution/coordinator.py", source
             for _ in range(60):
                 ex.step(sim_dt=0.05, perception_dt=0.05, control_dt=0.05, replan_dt=0.05)
             assert task.last_result["status"] == "selected", task.last_result

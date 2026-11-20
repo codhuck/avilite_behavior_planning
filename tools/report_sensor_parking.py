@@ -12,6 +12,7 @@ if not __name__.startswith("avlite.plugins."):
     from pathlib import Path
 
     import matplotlib
+    from _sources import source_files
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -127,7 +128,7 @@ if not __name__.startswith("avlite.plugins."):
         has_pedestrians = any(result.get("scenario", {}).get("pedestrian") for result in results)
         args.output.mkdir(parents=True, exist_ok=True)
         root = Path(__file__).resolve().parents[2]
-        source_paths = sorted((root / "avlite-behavior-hdmap").glob("*.py")) + [
+        source_paths = sorted(source_files(root / "avlite-behavior-hdmap")) + [
             root / "avlite-bridge-carla" / "carla_bridge.py",
             root / "avlite-bridge-carla" / "settings.py",
             Path(__file__).with_name("check_parking_carla.py"),

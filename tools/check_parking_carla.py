@@ -16,10 +16,13 @@ if not __name__.startswith("avlite.plugins."):
     from dataclasses import asdict
     from pathlib import Path
 
+    from _sources import source_files
+
     PLUGIN = Path(__file__).resolve().parents[1]
     sys.path[:0] = [str(PLUGIN), str(PLUGIN.parent)]
     import carla
     import numpy as np
+    from _bootstrap import load_plugin
     from avlite.c10_perception.c11_perception_model import EgoState, PerceptionModel
     from avlite.c20_planning.c21_planning_model import GlobalPlan
     from avlite.c50_common.c52_world_sensor_datatypes import Lidar
@@ -29,7 +32,15 @@ if not __name__.startswith("avlite.plugins."):
     from shapely.affinity import affine_transform
     from shapely.geometry import Polygon, box
 
-    from parking import ParkingController, ParkingPlanner, ParkingRequest, ParkingType, angle_error
+    load_plugin()
+
+    from avlite_coordination_demo.parking.planner import (
+        ParkingController,
+        ParkingPlanner,
+        ParkingRequest,
+        ParkingType,
+        angle_error,
+    )
 
     PAD = """<?xml version="1.0" standalone="yes"?><OpenDRIVE><header revMajor="1" revMinor="4" name="parking-pad" version="1" north="30" south="-30" east="120" west="0"/><road name="Parking test pad" length="120" id="1" junction="-1"><link/><type s="0" type="town"/><planView><geometry s="0" x="0" y="0" hdg="0" length="120"><line/></geometry></planView><elevationProfile><elevation s="0" a="0" b="0" c="0" d="0"/></elevationProfile><lanes><laneSection s="0"><left><lane id="1" type="driving" level="false"><link/><width sOffset="0" a="30" b="0" c="0" d="0"/></lane></left><center><lane id="0" type="none" level="false"><roadMark sOffset="0" type="none" weight="standard" color="standard" width="0"/></lane></center><right><lane id="-1" type="driving" level="false"><link/><width sOffset="0" a="30" b="0" c="0" d="0"/></lane></right></laneSection></lanes></road></OpenDRIVE>"""
 
@@ -157,7 +168,7 @@ if not __name__.startswith("avlite.plugins."):
                 package.__path__ = [str(PLUGIN)]
                 sys.modules[package.__name__] = package
                 planner_class = importlib.import_module(
-                    package.__name__ + ".visibility_parking"
+                    package.__name__ + ".parking.visibility"
                 ).VisibilityParkingPlanner
             planner = planner_class(
                 GlobalPlan(path=route, trajectory=TrajectoryTracker(path=route, velocity=[0, 0])),
@@ -168,7 +179,10 @@ if not __name__.startswith("avlite.plugins."):
                 policy.configure(planner)
             devices = []
             if sensor:
-                from parking_occupancy import FusedLidarParkingOccupancy, LidarParkingOccupancy
+                from avlite_coordination_demo.parking.occupancy import (
+                    FusedLidarParkingOccupancy,
+                    LidarParkingOccupancy,
+                )
 
                 planner.sensor_occupancy = (
                     FusedLidarParkingOccupancy(hazard_support_radius=hazard_support_radius)
@@ -247,7 +261,7 @@ if not __name__.startswith("avlite.plugins."):
             if scenario.get("view_objective"):
                 if not (active and sensor and rig and rig_layout == "surround"):
                     raise ValueError("View-objective trials require active surround LiDAR")
-                from task_visibility import GroundLidar
+                from avlite_coordination_demo.parking.view import GroundLidar
 
                 planner.view_objective = scenario["view_objective"]
                 planner.deterministic_search = True
@@ -765,7 +779,7 @@ if not __name__.startswith("avlite.plugins."):
                         },
                         source_sha256=freeze_sources(
                             args.output,
-                            sorted(PLUGIN.glob("*.py"))
+                            sorted(source_files(PLUGIN))
                             + [
                                 Path(__file__),
                                 Path(__file__).with_name("parking_pedestrian.py"),

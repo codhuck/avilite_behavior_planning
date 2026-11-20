@@ -11,7 +11,16 @@ from shapely.geometry import GeometryCollection, box
 
 
 def module(name):
-    spec = importlib.util.spec_from_file_location(name, Path(__file__).parents[1] / f"{name}.py")
+    spec = importlib.util.spec_from_file_location(
+        name,
+        Path(__file__).parents[1]
+        / {
+            "scan_visibility": "parking/scan.py",
+            "task_visibility": "parking/view.py",
+            "visibility_dispatch": "parking/dispatch.py",
+            "parking_search": "parking/search.py",
+        }[name],
+    )
     obj = importlib.util.module_from_spec(spec)
     sys.modules[name] = obj
     spec.loader.exec_module(obj)

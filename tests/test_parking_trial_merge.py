@@ -22,7 +22,7 @@ def recordings(tmp_path):
     protocol = dict(
         suite=[dict(id="first", seed=1), dict(id="second", seed=2)],
         args=dict(repeats=1, dt=0.1, output="unused", suite="full", case=None),
-        source_sha256={"parking.py": "fixed-source"},
+        source_sha256={"parking/planner.py": "fixed-source"},
     )
     reference = tmp_path / "reference.json"
     reference.write_text(json.dumps(protocol))
@@ -59,7 +59,7 @@ def test_merge_rejects_incompatible_or_selected_trials(merge, recordings, change
     p = sources[1] / "protocol.json"
     protocol = json.loads(p.read_text())
     if change == "runtime":
-        protocol["source_sha256"]["parking.py"] = "changed-source"
+        protocol["source_sha256"]["parking/planner.py"] = "changed-source"
     elif change == "options":
         protocol["args"]["dt"] = 0.05
     elif change == "scenario":

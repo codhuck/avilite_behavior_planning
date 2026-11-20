@@ -11,7 +11,16 @@ from shapely.geometry import GeometryCollection, box
 
 
 def load(name):
-    spec = importlib.util.spec_from_file_location(name, Path(__file__).parents[1] / f"{name}.py")
+    spec = importlib.util.spec_from_file_location(
+        name,
+        Path(__file__).parents[1]
+        / {
+            "scan_visibility": "parking/scan.py",
+            "task_visibility": "parking/view.py",
+            "visibility_dispatch": "parking/dispatch.py",
+            "parking_search": "parking/search.py",
+        }[name],
+    )
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
     spec.loader.exec_module(module)
@@ -150,7 +159,7 @@ def test_deterministic_recovery_budget_is_bounded_and_stopped_only(monkeypatch, 
     package = types.ModuleType("scan_budget_test")
     package.__path__ = [str(Path(__file__).parents[1])]
     monkeypatch.setitem(sys.modules, package.__name__, package)
-    api = importlib.import_module(package.__name__ + ".visibility_parking")
+    api = importlib.import_module(package.__name__ + ".parking.visibility")
     planner = object.__new__(api.VisibilityParkingPlanner)
     planner.pm = SimpleNamespace(
         ego_vehicle=SimpleNamespace(velocity=speed),

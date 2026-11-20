@@ -12,7 +12,7 @@ from shapely.geometry import GeometryCollection, box
 @pytest.fixture
 def api():
     spec = importlib.util.spec_from_file_location(
-        "visibility_dispatch_tests", Path(__file__).parents[1] / "visibility_dispatch.py"
+        "visibility_dispatch_tests", Path(__file__).parents[1] / "parking/dispatch.py"
     )
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -131,8 +131,8 @@ def test_visibility_adapter_is_registered_and_cancellation_latched():
     package = types.ModuleType("visibility_adapter_test")
     package.__path__ = [str(Path(__file__).parents[1])]
     sys.modules[package.__name__] = package
-    module = importlib.import_module(package.__name__ + ".visibility_parking")
-    parking = importlib.import_module(package.__name__ + ".parking")
+    module = importlib.import_module(package.__name__ + ".parking.visibility")
+    parking = importlib.import_module(package.__name__ + ".parking.planner")
     pm = PerceptionModel(ego_vehicle=EgoState(x=-9, y=0))
     pm.simulation_time = 0
     path = [(-9, 0), (0, 11)]
@@ -154,7 +154,7 @@ def test_visibility_adapter_is_registered_and_cancellation_latched():
 
 def test_search_respects_requested_entry_direction():
     spec = importlib.util.spec_from_file_location(
-        "visibility_search_tests", Path(__file__).parents[1] / "parking_search.py"
+        "visibility_search_tests", Path(__file__).parents[1] / "parking/search.py"
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -176,7 +176,7 @@ def test_search_respects_requested_entry_direction():
 
 def test_endpoint_refinement_is_exact_and_collision_checked():
     spec = importlib.util.spec_from_file_location(
-        "visibility_refinement_test", Path(__file__).parents[1] / "parking_search.py"
+        "visibility_refinement_test", Path(__file__).parents[1] / "parking/search.py"
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -234,7 +234,7 @@ def test_search_budget_escalates_only_while_stopped(monkeypatch, speed, expected
     package = types.ModuleType("visibility_budget_test")
     package.__path__ = [str(Path(__file__).parents[1])]
     monkeypatch.setitem(sys.modules, package.__name__, package)
-    module = importlib.import_module(package.__name__ + ".visibility_parking")
+    module = importlib.import_module(package.__name__ + ".parking.visibility")
     planner = object.__new__(module.VisibilityParkingPlanner)
     planner.pm = types.SimpleNamespace(
         ego_vehicle=types.SimpleNamespace(velocity=speed),
@@ -279,7 +279,7 @@ def test_stopped_rejected_obstructed_path_is_discarded(
     package = types.ModuleType("visibility_obstruction_test")
     package.__path__ = [str(Path(__file__).parents[1])]
     monkeypatch.setitem(sys.modules, package.__name__, package)
-    module = importlib.import_module(package.__name__ + ".visibility_parking")
+    module = importlib.import_module(package.__name__ + ".parking.visibility")
     planner = object.__new__(module.VisibilityParkingPlanner)
     planner.pm = types.SimpleNamespace(
         ego_vehicle=types.SimpleNamespace(x=0, y=0, theta=0, velocity=speed, length=4, width=2),

@@ -18,11 +18,14 @@ if not __name__.startswith("avlite.plugins."):
     import time
     from pathlib import Path
 
+    from _sources import source_files
+
     PLUGIN = Path(__file__).resolve().parents[1]
     sys.path[:0] = [str(PLUGIN), str(PLUGIN.parent)]
     import carla
     import numpy as np
     import shapely
+    from _bootstrap import load_plugin
     from avlite.c10_perception.c11_perception_model import EgoState, PerceptionModel
     from avlite.c20_planning.c21_planning_model import GlobalPlan
     from avlite.c50_common.c52_world_sensor_datatypes import Lidar
@@ -30,16 +33,18 @@ if not __name__.startswith("avlite.plugins."):
     from check_parking_carla import PAD
     from shapely.geometry import GeometryCollection, box
 
-    from parking import ParkingPlanner, ParkingRequest
-    from parking_occupancy import FusedLidarParkingOccupancy
-    from parking_search import rollout
-    from task_visibility import GroundLidar, TaskVisibility, beam_gain
-    from visibility_dispatch import (
+    load_plugin()
+
+    from avlite_coordination_demo.parking.dispatch import (
         Maneuver,
         VisibilityDispatcher,
         VisibilitySnapshot,
         expected_gain,
     )
+    from avlite_coordination_demo.parking.occupancy import FusedLidarParkingOccupancy
+    from avlite_coordination_demo.parking.planner import ParkingPlanner, ParkingRequest
+    from avlite_coordination_demo.parking.search import rollout
+    from avlite_coordination_demo.parking.view import GroundLidar, TaskVisibility, beam_gain
 
     def main():
         parser = argparse.ArgumentParser(description=__doc__)
@@ -67,7 +72,7 @@ if not __name__.startswith("avlite.plugins."):
             "candidates": "Straight and curvature +/-0.2; +/-0.5 and +/-1 metre; speed .1",
             "sources": {
                 str(p.relative_to(PLUGIN)): hashlib.sha256(p.read_bytes()).hexdigest()
-                for p in [*PLUGIN.glob("*.py"), Path(__file__)]
+                for p in [*source_files(PLUGIN), Path(__file__)]
             },
         }
         (args.output / "protocol.json").write_text(json.dumps(protocol, indent=2) + "\n")

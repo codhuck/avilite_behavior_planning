@@ -12,13 +12,16 @@ if not __name__.startswith("avlite.plugins."):
     PLUGIN = Path(__file__).resolve().parents[1]
     sys.path[:0] = [str(PLUGIN), str(PLUGIN.parent)]
     import numpy as np
+    from _bootstrap import load_plugin
     from avlite.c10_perception.c11_perception_model import EgoState
     from avlite.c50_common.c52_world_sensor_datatypes import Lidar
     from shapely.geometry import box
 
-    from parking_occupancy import FusedLidarParkingOccupancy
-    from task_visibility import GroundLidar, TaskVisibility, beam_gain
-    from visibility_dispatch import VisibilitySnapshot
+    load_plugin()
+
+    from avlite_coordination_demo.parking.dispatch import VisibilitySnapshot
+    from avlite_coordination_demo.parking.occupancy import FusedLidarParkingOccupancy
+    from avlite_coordination_demo.parking.view import GroundLidar, TaskVisibility, beam_gain
 
     def main():
         parser = argparse.ArgumentParser(description=__doc__)

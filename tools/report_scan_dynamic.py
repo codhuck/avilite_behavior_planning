@@ -26,9 +26,12 @@ if not __name__.startswith("avlite.plugins."):
                 / (rel[3:] if rel.startswith("../") else "avlite-behavior-hdmap/" + rel)
             )
             assert hashlib.sha256(path.read_bytes()).hexdigest() == digest
-        frozen_adapter = (
-            args.recording / "source_snapshot/avlite-behavior-hdmap/visibility_parking.py"
-        ).read_text()
+        snapshot = args.recording / "source_snapshot/avlite-behavior-hdmap"
+        adapter = snapshot / "parking/visibility.py"
+        if not adapter.is_file():
+            # Recordings made before the package layout change keep their original paths.
+            adapter = snapshot / "visibility_parking.py"
+        frozen_adapter = adapter.read_text()
         recovery_available = "self.recovery_search_expansions" in frozen_adapter
         rows = []
         for result in results:

@@ -17,7 +17,7 @@ flowchart LR
 
 ## Road planning
 
-`regulatory.py` extracts OpenDRIVE controls, lane applicability and crossing
+`perception/regulatory.py` extracts OpenDRIVE controls, lane applicability and crossing
 geometry. `HDMapLaneFollowingPlanner` follows connected lanes, excluding lateral
 lane-change edges.
 
@@ -41,7 +41,7 @@ path; if no feasible path is available, the vehicle follows or brakes.
 
 `RaceTrafficTask` creates two scripted rivals in BasicSim and removes its own
 actors on reset. It does not spawn CARLA traffic. The tested scenarios use
-low-speed scripted traffic; see [validation](../VALIDATION.md).
+low-speed scripted traffic; see [validation](validation/road-and-race.md).
 
 ## Planner selection
 
@@ -67,8 +67,8 @@ and cannot switch to ground-truth observations.
 
 The independent `avlite_signal_perception` package classifies RGB crops and
 combines associated heads. The AVLite adapter handles projection, frame age,
-green confirmation and pedestrian fusion. See [classifier setup](../SIGNAL_PACKAGE.md)
-and [detector reference](../SENSOR_PERCEPTION.md).
+green confirmation and pedestrian fusion. See [classifier setup](perception/classifier.md)
+and [detector reference](perception/sensors.md).
 
 ## Replacing perception
 

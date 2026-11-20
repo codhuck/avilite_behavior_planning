@@ -21,16 +21,26 @@ if not __name__.startswith("avlite.plugins."):
 
     ROOT = Path(__file__).resolve().parents[2]
     sys.path.insert(0, str(ROOT))
-    package = types.ModuleType("parking_bridge_validation")
-    package.__path__ = [str(ROOT / "avlite-bridge-carla")]
-    sys.modules[package.__name__] = package
-    module = importlib.import_module(package.__name__ + ".carla_bridge")
     from avlite.c40_execution.c49_settings import ExecutionSettings
 
     def main():
         parser = argparse.ArgumentParser(description=__doc__)
         parser.add_argument("--output", type=Path, default=Path("logs/parking_bridge_rig"))
+        parser.add_argument(
+            "--bridge-path",
+            type=Path,
+            default=ROOT / "avlite-bridge-carla",
+            help="Matching CARLA bridge plugin checkout",
+        )
         args = parser.parse_args()
+        bridge_path = args.bridge_path.expanduser().resolve()
+        if not (bridge_path / "carla_bridge.py").is_file():
+            parser.error("CARLA bridge not found; set --bridge-path to its checkout")
+        package = types.ModuleType("parking_bridge_validation")
+        package.__path__ = [str(bridge_path)]
+        sys.modules[package.__name__] = package
+        module = importlib.import_module(package.__name__ + ".carla_bridge")
+
         client = carla.Client("localhost", 2000)
         client.set_timeout(30)
         world = client.get_world()
