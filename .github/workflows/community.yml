@@ -35,3 +35,10 @@ jobs:
           python tools/check_coordinator_profile.py --profile race --output logs/race-factory.json
       - name: Parking scenarios
         run: python tools/check_parking.py --output logs/parking
+      - name: Drive-to-parking missions
+        run: |
+          python tools/check_missions.py --output logs/missions.json
+          python tools/prepare_mission_profiles.py --output-dir /tmp/avlite-community-check
+          for mode in perpendicular_forward perpendicular_reverse parallel; do
+            python tools/check_mission_profile.py --profile "mission-$mode" --output "logs/mission-$mode.json"
+          done

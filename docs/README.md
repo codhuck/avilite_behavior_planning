@@ -10,12 +10,14 @@
 - [Traffic-light classifier package](perception/classifier.md)
 - [RGB/LiDAR detector](perception/sensors.md)
 - [Parking](parking.md)
+- [Drive-to-parking missions and decision status](missions.md)
 - [Sensor-supported parking](sensor-supported-parking.md)
 
 ## Tests and experiments
 
 - [Test commands and compatibility results](testing.md)
 - [Road and race validation](validation/road-and-race.md)
+- [Drive-to-parking mission validation](validation/missions.md)
 - [Perception validation](validation/perception.md)
 - [CARLA coordination](validation/coordination-carla-validation.md)
 - [Sensor parking validation](validation/sensor-parking-validation.md)
