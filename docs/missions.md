@@ -21,6 +21,27 @@ between two stationary vehicles. Choose a fresh output directory if parking
 assets already exist; the generator refuses to overwrite them. With
 `AVLITE_CONFIG_DIR`, use that directory instead of `~/.config/avlite`.
 
+Before starting, check the profile without opening a simulator:
+
+```bash
+python tools/diagnose_mission.py \
+  --profile ~/.config/avlite/mission-perpendicular_forward.yaml
+```
+
+The report lists resolved input files and all independent errors it can find:
+missing or malformed files, unsupported mission settings, missing space IDs,
+invalid bay geometry, route dimensions and an approach point outside the route.
+It also rejects a status-output path that would overwrite an input file.
+Use `--json` for automation; errors return exit code 1, while warnings alone
+return 0. The check does not modify profiles or connect to a world bridge.
+
+Supply a complete YAML profile with explicit execution and plugin settings;
+the command does not merge the active user's settings. Mission and scene paths
+follow the runtime's working-directory convention. Route paths use AVLite's
+user-data and bundled-data lookup. Absolute paths avoid this distinction.
+Passing this check does not verify live sensor coverage, third-party bridge
+support, braking performance or parking-path feasibility.
+
 Open the read-only decision window in another terminal:
 
 ```bash
