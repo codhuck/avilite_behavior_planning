@@ -2,6 +2,7 @@
 
 import copy
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -59,8 +60,21 @@ class ParkingTask(TaskStrategy):
         return data
 
     def available_spaces(self, executer, parking_type):
-        """Filter surveyed candidates using fresh sensor coverage, never actor truth."""
+        """Filter surveyed spaces before handover; unknown coverage never means clear."""
         mode = ParkingType(parking_type).value
+        observation = self.observation(executer)
+        if observation is not None and observation.polygons is not None:
+            if not 0 <= executer.elapsed_sim_time - observation.stamp <= 0.3:
+                return []
+            polygons = observation.polygons
+            if any(p.is_empty or not p.is_valid for p in polygons):
+                return []
+            return [
+                name
+                for name, space in self.parking_spaces()["spaces"].items()
+                if mode in space["types"]
+                and not any(Polygon(space["bay"]).buffer(0.15).intersects(p) for p in polygons)
+            ]
         occupancy = getattr(executer.pm, "parking_occupancy", None)
         if occupancy is None or occupancy.status != "observed":
             return []
@@ -74,13 +88,16 @@ class ParkingTask(TaskStrategy):
             if mode in space["types"] and occupancy.permits(Polygon(space["bay"]))
         ]
 
-    def start_parking(self, executer, parking_type, space_id):
+    def start_parking(self, executer, parking_type, space_id, *, require_feasible=False):
         if not isinstance(executer, SyncExecuter):
             raise ValueError("Parking requires SyncExecuter")
-        if not executer.stopped:
+        if not executer.stopped and not getattr(executer.task_runner, "_in_step", False):
             raise ValueError("Pause execution before selecting a parking manoeuvre")
-        if abs(executer.pm.ego_vehicle.velocity) > 0.02:
-            raise ValueError("Stop the vehicle before parking handover")
+        for ego in (executer.pm.ego_vehicle, executer.world.get_ego_state()):
+            if not all(math.isfinite(v) for v in (ego.x, ego.y, ego.theta, ego.velocity)):
+                raise ValueError("Parking handover requires finite localization")
+            if abs(ego.velocity) > 0.02:
+                raise ValueError("Stop the vehicle before parking handover")
         if not isinstance(executer.world, BasicSim) and not callable(
             getattr(executer.world, "parking_geometry", None)
         ):
@@ -130,6 +147,21 @@ class ParkingTask(TaskStrategy):
             )
             planner.sensor_ground_z = PluginSettings.parking_ground_z
         planner.request_parking(request)
+        if require_feasible:
+            observation = self.observation(executer)
+            if observation is None or observation.polygons is None:
+                raise ValueError("Parking handover requires a complete occupancy observation")
+            if not 0 <= executer.elapsed_sim_time - observation.stamp <= 0.3:
+                raise ValueError("Parking observation is stale or from the future")
+            if data.get("demo"):
+                raise ValueError("Mission obstacles must exist before selecting a space")
+            if PluginSettings.parking_lidar_occupancy:
+                raise ValueError("Mission selection currently requires ParkingObservation")
+            executer.pm.simulation_time = executer.elapsed_sim_time
+            planner.update_obstacles(observation.polygons, observation.stamp)
+            planner.replan()
+            if planner.state == "PARKING_BLOCKED":
+                raise ValueError(planner.reason)
         candidate = copy.copy(executer)
         candidate.local_planner, candidate.controller = planner, controller
         candidate.validate_stack()
@@ -139,6 +171,9 @@ class ParkingTask(TaskStrategy):
         else:
             executer.world.controller = controller
         executer._last_cmd = None
+        invalidate = getattr(executer, "invalidate_planning", None)
+        if callable(invalidate):
+            invalidate()
         self.reset()
         self._world = executer.world
         if data.get("demo") and PluginSettings.parking_simulator_obstacles:
@@ -153,6 +188,18 @@ class ParkingTask(TaskStrategy):
             executer.local_planner.cancel()
             executer._last_cmd = None
 
+    def observation(self, executer):
+        """Return the producer's observation, or explicit BasicSim demo geometry."""
+        observation = getattr(executer.pm, "parking_observation", None)
+        if PluginSettings.parking_simulator_obstacles:
+            if not isinstance(executer.world, BasicSim):
+                raise ValueError("Simulator parking occupancy is restricted to BasicSim")
+            agents = executer.world.pm.agent_vehicles + executer.world.pm.static_obstacles
+            observation = ParkingObservation(
+                tuple(Polygon(a.get_bb_corners()) for a in agents), executer.elapsed_sim_time
+            )
+        return observation
+
     def execute(self, executer, event=None):
         planner = executer.local_planner
         if not isinstance(planner, ParkingPlanner):
@@ -162,13 +209,6 @@ class ParkingTask(TaskStrategy):
             return
         self._world = executer.world
         executer.pm.simulation_time = executer.elapsed_sim_time
-        observation = getattr(executer.pm, "parking_observation", None)
-        if PluginSettings.parking_simulator_obstacles:
-            if not isinstance(executer.world, BasicSim):
-                raise ValueError("Simulator parking occupancy is restricted to BasicSim")
-            agents = executer.world.pm.agent_vehicles + executer.world.pm.static_obstacles
-            observation = ParkingObservation(
-                tuple(Polygon(a.get_bb_corners()) for a in agents), executer.elapsed_sim_time
-            )
+        observation = self.observation(executer)
         if observation is not None:
             planner.update_obstacles(observation.polygons, observation.stamp)

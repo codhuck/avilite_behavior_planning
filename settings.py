@@ -5,6 +5,12 @@ from pydantic import Field
 
 
 class PluginSettingsSchema(SettingsSchema):
+    mission_file: str = Field(
+        default="", description="Drive-to-parking mission JSON; empty disables the task."
+    )
+    decision_status_file: str = Field(
+        default="", description="Optional JSON status file for the read-only mission monitor."
+    )
     cruise_speed_limit: float | None = Field(
         default=None,
         gt=0,

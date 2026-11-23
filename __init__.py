@@ -8,6 +8,9 @@ from .execution.coordinator import (
     PlanningStrategySelected,
     SelectPlanningStrategy,
 )
+from .execution.decision_status import DecisionStatusTask
+from .execution.mission import ParkingMission, ParkingMissionTask
+from .execution.parking_demo import ParkingDemoTrafficTask
 from .execution.parking_task import ParkingObservation, ParkingTask
 from .execution.race_traffic import RaceTrafficTask
 from .execution.runtime import (
@@ -34,10 +37,16 @@ from .planning.hdmap_behavior import (
     HDMapStopBehaviorPlanner,
 )
 from .planning.race_behavior import RaceBehaviorPlanner, RacePathPlanner, RaceVelocityPlanner
+from .planning.surveyed_route import SurveyedRoutePlanner
 from .planning.tree_planner import HDMapBehaviorTreePlanner
 from .settings import PluginSettings
 
 __all__ = [
+    "SurveyedRoutePlanner",
+    "ParkingDemoTrafficTask",
+    "ParkingMission",
+    "ParkingMissionTask",
+    "DecisionStatusTask",
     "BehaviorPlanningPipeline",
     "BehaviorStanleyController",
     "PlanningBasicSim",

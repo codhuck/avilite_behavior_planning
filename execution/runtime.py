@@ -8,6 +8,7 @@ from avlite.c20_planning.c23_local_planning_strategy import (
     LocalPlanningPipeline,
     LocalPlanningStrategy,
 )
+from avlite.c30_control.c31_control_model import ControlCommand
 from avlite.c30_control.c34_stanley import StanleyController
 from avlite.c40_execution.c43_task_strategy import ExecutionStarted
 from avlite.c40_execution.c44_sync_executer import SyncExecuter
@@ -54,6 +55,33 @@ class PlanningSyncExecuter(SyncExecuter):
         self._planning_start_sent = False
         self._fresh_planning = False
         self._fresh_perception = False
+        self.motion_holds = {}
+
+    def hold_motion(self, owner, reason):
+        """Latch braking across paced control ticks until the owner releases it."""
+        self.motion_holds[owner] = reason
+
+    def release_motion(self, owner):
+        if owner in self.motion_holds:
+            del self.motion_holds[owner]
+            self.invalidate_planning()
+
+    def _simulate_step(self, dt):
+        if self.motion_holds:
+            previous = self._last_cmd
+            if isinstance(previous, DirectionalAckermannCommand):
+                self._last_cmd = DirectionalAckermannCommand(
+                    steer=previous.steer,
+                    acceleration=-3.0,
+                    direction=previous.direction,
+                    hold_brake=True,
+                )
+            else:
+                self._last_cmd = ControlCommand(
+                    steer=getattr(previous, "steer", 0.0),
+                    acceleration=-3.0,
+                )
+        return super()._simulate_step(dt)
 
     def invalidate_planning(self):
         self._fresh_planning = True
@@ -74,6 +102,10 @@ class PlanningSyncExecuter(SyncExecuter):
         if not self._planning_start_sent and kwargs.get("call_tasks", True):
             self.task_runner.notify(ExecutionStarted())
             self._planning_start_sent = True
+        for task in self.task_runner.tasks:
+            before_step = getattr(task, "before_step", None)
+            if callable(before_step):
+                before_step(self, tasks_enabled=kwargs["call_tasks"])
         # These overrides apply only to the next enabled stage, not subsequent
         # timing policy. Clear before super so an event during the tick persists.
         if self._fresh_planning:
@@ -90,10 +122,15 @@ class PlanningSyncExecuter(SyncExecuter):
         return super().step(**kwargs)
 
     def reset(self):
+        for task in self.task_runner.tasks:
+            prepare_reset = getattr(task, "prepare_reset", None)
+            if callable(prepare_reset):
+                prepare_reset(self)
         super().reset()
         self._planning_start_sent = False
         self._fresh_planning = True
         self._fresh_perception = True
+        self.motion_holds = {}
 
 
 class BehaviorStanleyController(StanleyController):

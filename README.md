@@ -9,8 +9,9 @@ Includes forward, reverse and parallel parking.
 
 ## Install
 
-Requires Python 3.10+ and AVLite 0.6.7. The plugin is not yet listed in the
-community catalog. Activate the AVLite environment, then clone and install:
+Requires Python 3.10+ and AVLite 0.6.7. The plugin is listed in the
+[community catalog](https://github.com/AV-Lab/avlite-community-plugins).
+To install from source, activate the AVLite environment, then clone and install:
 
 ```bash
 git clone https://github.com/codhuck/avilite_behavior_planning.git avlite-behavior-hdmap
@@ -81,6 +82,12 @@ Parking uses `ParkingTask`, `ParkingPlanner` and `ParkingController`. Select the
 type through the task API; [parking.md](docs/parking.md) describes the scene
 format and examples. The custom **Parking…** dialog requires the development
 GUI and is not included in stock AVLite.
+
+For an automatic drive-to-parking handover, use `ParkingMissionTask`. It selects
+a confirmed free surveyed space, checks the parking path and holds the brake
+after completion or a timeout. [Mission examples](docs/missions.md) include
+three parking types and a separate decision-status window. These examples run
+in BasicSim with simulated occupancy.
 
 ## Tests
 
