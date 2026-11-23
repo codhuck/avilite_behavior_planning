@@ -88,6 +88,8 @@ a confirmed free surveyed space, checks the parking path and holds the brake
 after completion or a timeout. [Mission examples](docs/missions.md) include
 three parking types and a separate decision-status window. These examples run
 in BasicSim with simulated occupancy.
+Run `python tools/diagnose_mission.py --profile /path/to/mission-profile.yaml`
+to check a complete mission profile before starting the simulator.
 
 ## Tests
 

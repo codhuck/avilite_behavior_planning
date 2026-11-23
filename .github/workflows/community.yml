@@ -40,5 +40,6 @@ jobs:
           python tools/check_missions.py --output logs/missions.json
           python tools/prepare_mission_profiles.py --output-dir /tmp/avlite-community-check
           for mode in perpendicular_forward perpendicular_reverse parallel; do
+            python tools/diagnose_mission.py --profile "/tmp/avlite-community-check/mission-$mode.yaml" --json > "logs/diagnostic-$mode.json"
             python tools/check_mission_profile.py --profile "mission-$mode" --output "logs/mission-$mode.json"
           done
