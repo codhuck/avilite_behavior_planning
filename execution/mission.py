@@ -125,9 +125,11 @@ class ParkingMissionTask(TaskStrategy):
 
     def _load(self, ex):
         self.spec = ParkingMission.from_file(PluginSettings.mission_file)
-        if PluginSettings.parking_lidar_occupancy:
-            raise ValueError("mission_requires_complete_parking_observation")
+        if PluginSettings.parking_active_observation:
+            raise ValueError("mission_requires_fully_observed_parking_path")
         scene = self.parking.parking_spaces()
+        if PluginSettings.parking_lidar_occupancy:
+            self.parking.configure_mission_lidar(scene)
         if scene.get("demo"):
             raise ValueError("mission_obstacles_must_exist_before_selection")
         for name in self.spec.spaces:
@@ -176,8 +178,29 @@ class ParkingMissionTask(TaskStrategy):
                     ex.hold_motion(self, self.reason)
             elif self.state == "PARKING":
                 self.parking.execute(ex)
+                self._sensor_hold(ex)
         except (ValueError, KeyError, TypeError, OSError) as exc:
             self._block(ex, str(exc))
+
+    def before_replan(self, ex, sensors):
+        """Use the executor's frame after localization, before planning/control."""
+        if self.state in {"APPROACH", "SETTLING", "SELECT_SPACE", "PARKING"}:
+            try:
+                self.parking.observe_sensors(ex, sensors)
+            except (ValueError, TypeError, AttributeError) as exc:
+                self._block(ex, "invalid_parking_sensor_frame:" + str(exc))
+            if self.state == "PARKING":
+                self._sensor_hold(ex)
+
+    def _sensor_hold(self, ex):
+        view = self.parking.sensor_view
+        if view is None:
+            return
+        reason = view.reason(float(ex.elapsed_sim_time))
+        if reason != "observed":
+            ex.hold_motion(self.parking, reason)
+        else:
+            ex.release_motion(self.parking)
 
     def execute(self, ex, event=None):
         if PluginSettings.mission_file and not callable(getattr(ex, "hold_motion", None)):
@@ -224,12 +247,14 @@ class ParkingMissionTask(TaskStrategy):
                 if not stopped:
                     self._block(ex, "vehicle_moved_during_selection")
                     return
-                available = self.parking.available_spaces(ex, self.spec.parking_type)
+                statuses = self.parking.space_statuses(ex, self.spec.parking_type)
                 failures = []
-                self.candidate_results = {}
+                self.candidate_results = {
+                    name: statuses.get(name, "unknown") for name in self.spec.spaces
+                }
                 for name in self.spec.spaces:
-                    if name not in available:
-                        self.candidate_results[name] = "not_confirmed_free"
+                    if statuses.get(name) != "free":
+                        self.candidate_results[name] = statuses.get(name, "unknown")
                         continue
                     try:
                         self.parking.start_parking(
@@ -247,7 +272,13 @@ class ParkingMissionTask(TaskStrategy):
                     ex.release_motion(self)
                     return
                 observation = self.parking.observation(ex)
-                if observation is None or observation.polygons is None:
+                if self.parking.sensor_view is not None:
+                    reason = self.parking.sensor_view.reason(now)
+                    if reason == "observed":
+                        reason = (
+                            "no_feasible_parking_path" if failures else "no_confirmed_free_space"
+                        )
+                elif observation is None or observation.polygons is None:
                     reason = "parking_observation_unavailable"
                 elif not math.isfinite(observation.stamp):
                     reason = "parking_observation_invalid"

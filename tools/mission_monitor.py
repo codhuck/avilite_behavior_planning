@@ -23,6 +23,14 @@ if not __name__.startswith("avlite.plugins."):
                 f"Observation: {data['observation_source']}",
                 f"Observation age: {number('observation_age_s', 's')}",
                 f"Brake holds: {', '.join(data['motion_holds']) or 'none'}",
+                "Parking spaces: "
+                + (
+                    ", ".join(
+                        f"{name}: {state.replace('_', ' ')}"
+                        for name, state in data.get("parking_candidates", {}).items()
+                    )
+                    or "—"
+                ),
             ]
         )
 

@@ -242,7 +242,7 @@ def test_occupied_first_choice_uses_second_candidate(stack, runner):
     path.write_text(json.dumps(data))
     until(ex, mission, "PARKING")
     assert mission.space == "demo_bay"
-    assert mission.candidate_results == {"occupied": "not_confirmed_free", "demo_bay": "accepted"}
+    assert mission.candidate_results == {"occupied": "occupied", "demo_bay": "accepted"}
 
 
 def test_status_file_contains_actual_decision(stack, runner, tmp_path):

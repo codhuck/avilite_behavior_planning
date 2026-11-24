@@ -61,6 +61,10 @@ class DecisionStatusTask(TaskStrategy):
                 if PluginSettings.parking_simulator_obstacles
                 else "ParkingObservation"
             )
+            view = mission.parking.sensor_view
+            if view is not None:
+                stamp = view.stamp
+                source = "LiDAR ground coverage"
         key = (state, reason, obj)
         changed = key != self._key
         if changed or now < self._since:

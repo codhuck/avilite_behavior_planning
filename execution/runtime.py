@@ -66,6 +66,14 @@ class PlanningSyncExecuter(SyncExecuter):
             del self.motion_holds[owner]
             self.invalidate_planning()
 
+    def _replan_step(self, sensors):
+        if self.call_tasks:
+            for task in self.task_runner.tasks:
+                before_replan = getattr(task, "before_replan", None)
+                if callable(before_replan):
+                    before_replan(self, sensors)
+        return super()._replan_step(sensors)
+
     def _simulate_step(self, dt):
         if self.motion_holds:
             previous = self._last_cmd

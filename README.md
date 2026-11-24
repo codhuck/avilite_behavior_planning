@@ -87,7 +87,9 @@ For an automatic drive-to-parking handover, use `ParkingMissionTask`. It selects
 a confirmed free surveyed space, checks the parking path and holds the brake
 after completion or a timeout. [Mission examples](docs/missions.md) include
 three parking types and a separate decision-status window. These examples run
-in BasicSim with simulated occupancy.
+in BasicSim with simulated occupancy. Missions can also select spaces from
+fresh LiDAR ground coverage; unknown cells block the bay and its approach path.
+See the mission guide for calibration requirements and validation limits.
 Run `python tools/diagnose_mission.py --profile /path/to/mission-profile.yaml`
 to check a complete mission profile before starting the simulator.
 

@@ -118,10 +118,21 @@ def diagnose_mission(profile_path):
     if isinstance(apps, dict) and apps.get("c62_load_plugins") is False:
         error("c62_load_plugins", "Plugin loading is disabled")
     if parsed is not None:
-        if parsed.parking_lidar_occupancy or parsed.parking_active_observation:
+        if parsed.parking_active_observation:
             error(
+                "parking_active_observation",
+                "Mission selection requires a fully observed parking path",
+            )
+        if parsed.parking_lidar_occupancy:
+            if parsed.parking_ground_z is None or not math.isfinite(parsed.parking_ground_z):
+                error(
+                    "parking_ground_z", "LiDAR missions require a finite surveyed ground elevation"
+                )
+            if parsed.parking_simulator_obstacles:
+                error("parking_simulator_obstacles", "Select either LiDAR or simulator occupancy")
+            warn(
                 "parking_lidar_occupancy",
-                "Automatic mission selection requires complete ParkingObservation, not partial LiDAR coverage",
+                "Requires synchronized calibrated LiDAR and acquisition-time localization; live coverage is not checked",
             )
         if parsed.parking_simulator_obstacles and execution.get("c40_bridge") != "PlanningBasicSim":
             error("parking_simulator_obstacles", "Simulator occupancy requires PlanningBasicSim")
@@ -134,7 +145,7 @@ def diagnose_mission(profile_path):
                     "ParkingDemoTrafficTask",
                     "Demo traffic requires PlanningBasicSim and simulator occupancy",
                 )
-        if not parsed.parking_simulator_obstacles:
+        if not parsed.parking_simulator_obstacles and not parsed.parking_lidar_occupancy:
             warn(
                 "parking_observation",
                 "A live producer must supply fresh complete ParkingObservation; this check cannot verify it",

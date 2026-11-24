@@ -1,5 +1,8 @@
 # Requirements and evidence
 
+A direct review of the supplied 18 November recording is in
+[the 24 November audit](zoom-review-20261124.md), with timestamps and fresh checks.
+
 The newer 18 November meeting is covered separately by
 [task coordination](../task-coordination.md) and its
 [validation record](coordination-validation.md): registered coordinator task,

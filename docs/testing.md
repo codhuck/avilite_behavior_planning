@@ -15,6 +15,22 @@ ruff format --check .
 The parent root directory lets pytest import the plugin's root `__init__.py`
 correctly. These tests do not require CARLA or a display.
 
+The coordinator acceptance tests ship in this repository; they do not require
+AVLite's development test tree. To check the meeting's coordination and sensor
+interface requirements separately:
+
+```bash
+python -m pytest --rootdir=.. --import-mode=importlib -q \
+  tests/test_planning_coordinator.py tests/test_community_runtime.py
+```
+
+These checks cover task events, stopped replacement, refusal without changing
+the current stack, capability checks, and replacement of a camera/LiDAR source
+while keeping the same perception and planner. The two sensor sources are test
+bridges with synthetic frames and deterministic person detections; the checks
+exercise the interface and fusion, not detector accuracy. Follow with the
+BasicSim runs below to verify physical movement around the handover.
+
 ## BasicSim
 
 ```bash

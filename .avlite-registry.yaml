@@ -5,8 +5,8 @@ repository: https://github.com/codhuck/avilite_behavior_planning
 version: latest
 author: codhuck
 category:
-  - PlanningStrategy
-  - TaskStrategy
+  - GlobalPlannerStrategy
+  - LocalPlanningStrategy
   - PerceptionStrategy
   - ControlStrategy
   - ExecutionStrategy
@@ -14,4 +14,4 @@ category:
 min_avlite_version: "0.6.7"
 require_ros: false
 dependency_notes: "BasicSim demo needs no ROS, CARLA or model download. Sensor experiments require a compatible CARLA bridge, server and detector weights. Use the plugin runtime adapters on stock AVLite."
-site_url: https://github.com/codhuck/avilite_behavior_planning#readme
+site_url: https://github.com/codhuck/avilite_behavior_planning

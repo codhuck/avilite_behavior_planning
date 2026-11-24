@@ -13,6 +13,7 @@ from avlite.c40_execution.c44_sync_executer import SyncExecuter
 from avlite.c40_execution.c46_basic_sim import BasicSim
 from shapely.geometry import Polygon
 
+from ..parking.mission_observation import MissionLidarObservation
 from ..parking.occupancy import FusedLidarParkingOccupancy, LidarParkingOccupancy
 from ..parking.planner import ParkingController, ParkingPlanner, ParkingRequest, ParkingType
 from ..parking.visibility import VisibilityParkingPlanner
@@ -49,6 +50,7 @@ class ParkingTask(TaskStrategy):
         self._demo_agents = []
         self._world = None
         self.last_result = None
+        self.sensor_view = None
 
     def parking_spaces(self):
         path = Path(PluginSettings.parking_scene_file).expanduser()
@@ -59,33 +61,94 @@ class ParkingTask(TaskStrategy):
             raise ValueError("Parking scene must have version 1 and named spaces")
         return data
 
-    def available_spaces(self, executer, parking_type):
-        """Filter surveyed spaces before handover; unknown coverage never means clear."""
+    @staticmethod
+    def lidar_provider():
+        if PluginSettings.parking_simulator_obstacles:
+            raise ValueError("Select either LiDAR occupancy or simulator occupancy")
+        ground = PluginSettings.parking_ground_z
+        if ground is None or not math.isfinite(ground):
+            raise ValueError("Set finite surveyed parking_ground_z for the flat parking area")
+        return (
+            FusedLidarParkingOccupancy(
+                minimum_support=PluginSettings.parking_minimum_sensor_support,
+                hazard_support_radius=PluginSettings.parking_hazard_support_radius,
+            )
+            if PluginSettings.parking_multi_lidar
+            else LidarParkingOccupancy()
+        )
+
+    def configure_mission_lidar(self, scene):
+        self.sensor_view = MissionLidarObservation(
+            self.lidar_provider(), Polygon(scene["drivable"]), PluginSettings.parking_ground_z
+        )
+
+    def observe_sensors(self, ex, sensors):
+        if self.sensor_view is None:
+            return
+        self.sensor_view.observe(sensors, ex.pm.ego_vehicle, float(ex.elapsed_sim_time))
+        ex.pm.parking_occupancy = self.sensor_view.occupancy
+        if self._world is ex.world and isinstance(ex.local_planner, ParkingPlanner):
+            self.sensor_view.apply(ex.local_planner, float(ex.elapsed_sim_time))
+
+    def space_statuses(self, executer, parking_type):
+        """Classify only from the selected source; unknown never means clear."""
         mode = ParkingType(parking_type).value
+        spaces = {
+            name: Polygon(space["bay"])
+            for name, space in self.parking_spaces()["spaces"].items()
+            if mode in space["types"]
+        }
+        now = float(executer.elapsed_sim_time)
+        if self.sensor_view is not None:
+            return {name: self.sensor_view.classify(bay, now) for name, bay in spaces.items()}
+        if PluginSettings.parking_lidar_occupancy:
+            # Manual parking owns its observer inside the planner. Automatic
+            # missions use sensor_view above, including before handover.
+            planner = executer.local_planner
+            occupancy = getattr(executer.pm, "parking_occupancy", None)
+            stamp = getattr(planner, "_observed_time", None)
+            if (
+                isinstance(planner, ParkingPlanner)
+                and planner.sensor_occupancy is not None
+                and planner.obstacles is not None
+                and occupancy is not None
+                and occupancy.status == "observed"
+                and stamp is not None
+                and 0 <= now - stamp <= 0.3
+            ):
+                return {
+                    name: "occupied"
+                    if occupancy.occupied is not None
+                    and occupancy.occupied.intersects(bay.buffer(0.15))
+                    else "free"
+                    if occupancy.permits(bay)
+                    else "unknown"
+                    for name, bay in spaces.items()
+                }
+            return {name: "missing_or_stale_lidar" for name in spaces}
         observation = self.observation(executer)
-        if observation is not None and observation.polygons is not None:
-            if not 0 <= executer.elapsed_sim_time - observation.stamp <= 0.3:
-                return []
-            polygons = observation.polygons
-            if any(p.is_empty or not p.is_valid for p in polygons):
-                return []
-            return [
-                name
-                for name, space in self.parking_spaces()["spaces"].items()
-                if mode in space["types"]
-                and not any(Polygon(space["bay"]).buffer(0.15).intersects(p) for p in polygons)
-            ]
-        occupancy = getattr(executer.pm, "parking_occupancy", None)
-        if occupancy is None or occupancy.status != "observed":
-            return []
-        planner = executer.local_planner
-        stamp = getattr(planner, "_observed_time", None)
-        if stamp is None or not 0 <= executer.elapsed_sim_time - stamp <= 0.3:
-            return []
+        if observation is None or observation.polygons is None:
+            reason = "unknown"
+        elif not math.isfinite(observation.stamp):
+            reason = "invalid_observation"
+        elif not 0 <= now - observation.stamp <= 0.3:
+            reason = "stale_or_future_observation"
+        elif any(p.is_empty or not p.is_valid for p in observation.polygons):
+            reason = "invalid_observation"
+        else:
+            return {
+                name: "occupied"
+                if any(bay.buffer(0.15).intersects(p) for p in observation.polygons)
+                else "free"
+                for name, bay in spaces.items()
+            }
+        return {name: reason for name in spaces}
+
+    def available_spaces(self, executer, parking_type):
         return [
             name
-            for name, space in self.parking_spaces()["spaces"].items()
-            if mode in space["types"] and occupancy.permits(Polygon(space["bay"]))
+            for name, status in self.space_statuses(executer, parking_type).items()
+            if status == "free"
         ]
 
     def start_parking(self, executer, parking_type, space_id, *, require_feasible=False):
@@ -133,32 +196,32 @@ class ParkingTask(TaskStrategy):
             controller.rear_offset = geometry["rear_offset"]
             planner.rear_offset = geometry["rear_offset"]
         if PluginSettings.parking_lidar_occupancy:
-            if PluginSettings.parking_simulator_obstacles:
-                raise ValueError("Select either LiDAR occupancy or simulator occupancy")
-            if PluginSettings.parking_ground_z is None:
-                raise ValueError("Set surveyed parking_ground_z for the flat parking area")
-            planner.sensor_occupancy = (
-                FusedLidarParkingOccupancy(
-                    minimum_support=PluginSettings.parking_minimum_sensor_support,
-                    hazard_support_radius=PluginSettings.parking_hazard_support_radius,
-                )
-                if PluginSettings.parking_multi_lidar
-                else LidarParkingOccupancy()
-            )
-            planner.sensor_ground_z = PluginSettings.parking_ground_z
+            provider = self.lidar_provider()
+            if require_feasible:
+                if self.sensor_view is None:
+                    raise ValueError("Mission LiDAR observation is not configured")
+                if PluginSettings.parking_active_observation:
+                    raise ValueError("Mission selection requires a fully observed parking path")
+            else:
+                planner.sensor_occupancy = provider
+                planner.sensor_ground_z = PluginSettings.parking_ground_z
         planner.request_parking(request)
         if require_feasible:
-            observation = self.observation(executer)
-            if observation is None or observation.polygons is None:
-                raise ValueError("Parking handover requires a complete occupancy observation")
-            if not 0 <= executer.elapsed_sim_time - observation.stamp <= 0.3:
-                raise ValueError("Parking observation is stale or from the future")
             if data.get("demo"):
                 raise ValueError("Mission obstacles must exist before selecting a space")
-            if PluginSettings.parking_lidar_occupancy:
-                raise ValueError("Mission selection currently requires ParkingObservation")
             executer.pm.simulation_time = executer.elapsed_sim_time
-            planner.update_obstacles(observation.polygons, observation.stamp)
+            if PluginSettings.parking_lidar_occupancy:
+                status = self.sensor_view.classify(request.bay, executer.elapsed_sim_time)
+                if status != "free":
+                    raise ValueError("Parking space is " + status)
+                self.sensor_view.apply(planner, executer.elapsed_sim_time)
+            else:
+                observation = self.observation(executer)
+                if observation is None or observation.polygons is None:
+                    raise ValueError("Parking handover requires a complete occupancy observation")
+                if not 0 <= executer.elapsed_sim_time - observation.stamp <= 0.3:
+                    raise ValueError("Parking observation is stale or from the future")
+                planner.update_obstacles(observation.polygons, observation.stamp)
             planner.replan()
             if planner.state == "PARKING_BLOCKED":
                 raise ValueError(planner.reason)
@@ -174,7 +237,9 @@ class ParkingTask(TaskStrategy):
         invalidate = getattr(executer, "invalidate_planning", None)
         if callable(invalidate):
             invalidate()
+        sensor_view = self.sensor_view if require_feasible else None
         self.reset()
+        self.sensor_view = sensor_view
         self._world = executer.world
         if data.get("demo") and PluginSettings.parking_simulator_obstacles:
             for fields in space.get("parked_vehicles", []):
@@ -209,6 +274,9 @@ class ParkingTask(TaskStrategy):
             return
         self._world = executer.world
         executer.pm.simulation_time = executer.elapsed_sim_time
+        if self.sensor_view is not None:
+            self.sensor_view.apply(planner, executer.elapsed_sim_time)
+            return
         observation = self.observation(executer)
         if observation is not None:
             planner.update_obstacles(observation.polygons, observation.stamp)

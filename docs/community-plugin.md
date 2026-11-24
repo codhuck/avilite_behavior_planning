@@ -81,6 +81,6 @@ an existing file and includes a SHA-256 source manifest. Caches, build outputs,
 logs and downloaded ONNX models are excluded; bundled classifier NPZ files are
 included. Install dependencies and fetch optional models on the target machine.
 
-The repository is not yet listed in the community catalog. The proposed entry
-is in `.avlite-registry.yaml`; submission requires the tested revision to be
-published first. Compatibility results are in [testing.md](testing.md).
+The plugin is listed in the community catalog. `.avlite-registry.yaml` contains
+its registry metadata. Compatibility results and standalone verification
+commands are in [testing.md](testing.md).

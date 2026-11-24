@@ -179,3 +179,22 @@ def test_damaged_yaml_and_missing_profile_are_readable_errors(helpers, tmp_path)
     assert not diagnostics.diagnose_mission(path)["passed"]
     path.write_text("c40_execution: [broken")
     assert not diagnostics.diagnose_mission(path)["passed"]
+
+
+def test_lidar_mission_profile_checks_calibration_and_conflicts(helpers, files):
+    _, diagnostics, _ = helpers
+    _, profile, settings = files
+    profile["c40_execution"]["c40_execution_tasks"] = ["ParkingMissionTask", "DecisionStatusTask"]
+    settings["parking_lidar_occupancy"] = True
+    report = diagnostics.diagnose_mission(write_profile(files))
+    assert {"parking_ground_z", "parking_simulator_obstacles"} <= {
+        e["field"] for e in report["errors"]
+    }
+    settings["parking_ground_z"] = 0.0
+    settings["parking_simulator_obstacles"] = False
+    report = diagnostics.diagnose_mission(write_profile(files))
+    assert report["passed"]
+    assert any(e["field"] == "parking_lidar_occupancy" for e in report["warnings"])
+    settings["parking_active_observation"] = True
+    report = diagnostics.diagnose_mission(write_profile(files))
+    assert "parking_active_observation" in {e["field"] for e in report["errors"]}

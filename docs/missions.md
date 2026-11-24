@@ -99,17 +99,63 @@ use the road behavior stack and its perception producer instead.
 
 ## Observations and handover
 
-The current mission selector requires `ParkingObservation`: complete occupied
-polygons for the surveyed parking area with a simulation-time acquisition stamp.
-An empty tuple means the area was observed and is clear; `None` means unknown.
-Zero detector outputs alone do not satisfy this contract. Observations more
-than 0.3 seconds old, from the future, or with invalid polygons cannot authorize
-a handover. The existing LiDAR parking mode remains available through manual
-`ParkingTask`; mission selection from partial LiDAR coverage is not implemented.
+There are two observation sources. Select one explicitly:
 
-`parking_simulator_obstacles: true` is an explicit BasicSim-only substitute
-for that producer. The supplied examples use it. They are not sensor-validation
-or CARLA results.
+- `ParkingObservation` supplies complete occupied polygons for the surveyed area
+  and a simulation-time acquisition stamp. An empty tuple means observed clear;
+  `None` means unknown. Zero detections alone do not establish free space.
+- LiDAR mode builds a fresh ground-coverage grid before space selection. Returns
+  above or below the surveyed ground band are hazards. Cells without ground
+  returns remain unknown. A bay must be covered, including a 0.15 m clearance,
+  and the parking path must fit inside the observed traversable area. A clear
+  bay alone is insufficient.
+
+To enable LiDAR selection in a mission profile whose bridge supplies 3D LiDAR:
+
+```yaml
+plugins:
+  avlite_behavior_hdmap:
+    parking_lidar_occupancy: true
+    parking_simulator_obstacles: false
+    parking_ground_z: 0.0  # replace with surveyed elevation in localization coordinates
+    parking_multi_lidar: false
+    parking_active_observation: false
+```
+
+Use `PlanningSyncExecuter` with `ParkingMissionTask`. Remove
+`ParkingDemoTrafficTask` when converting a demo profile. The generated BasicSim
+profiles do not provide a calibrated 3D ground-return sensor; changing this
+flag alone will not make them sensor demos.
+
+The executor passes the same sensor
+snapshot used by that planning tick, after localization; the task never fetches
+another frame or advances the simulator. The bridge must provide calibrated
+LiDAR mounts and a pose aligned with acquisition time. Assembly and acquisition
+stamps must match within 10 microseconds, since this adapter has no pose history
+for correcting delayed clouds. The first frame establishes the sensor-clock
+offset from execution time; this requires a current first snapshot. Subsequent
+frames keep that offset. Repeated frames keep their original geometry and age;
+missing, out-of-order, future or stale data cannot authorize a handover.
+
+For several synchronized devices, enable `parking_multi_lidar` and configure
+`parking_minimum_sensor_support` and `parking_hazard_support_radius` as described
+in [sensor parking](parking.md). Device support is counted independently, not
+by the number of points. Sparse or occluded ground can prevent selection. The
+mission waits at the approach point for a fresh observation; it does not drive
+into an unknown area to improve visibility. Active observation manoeuvres
+remain a separate manual parking mode and are rejected by mission diagnostics.
+
+The observer survives handover and supplies each parking replan. If observations
+age beyond 0.3 seconds, a brake hold also prevents motion when replanning is
+paced or disabled. Fresh observations can clear that sensor hold; a mission
+already latched `BLOCKED` still requires an explicit retry. The decision output
+shows the source, observation age and per-space reasons such as `occupied`,
+`unknown`, `stale_lidar` or `accepted`.
+
+`parking_simulator_obstacles: true` is a BasicSim-only substitute for a complete
+observation producer. The generated examples use it. They are not LiDAR or CARLA
+results. The LiDAR mission tests use calibrated synthetic point clouds and
+BasicSim motion; real CARLA sensor validation of this integration is still needed.
 
 At the approach point, the mission applies a braking hold and checks both the
 localized and bridge-reported pose. Handover requires speed at most 0.02 m/s
@@ -147,7 +193,7 @@ snapshot; the optional JSON file is replaced atomically, at most every 0.25
 simulation seconds except on changes. Use a different file for each process.
 
 ```bash
-python -m pytest --rootdir=.. --import-mode=importlib -q tests/test_missions.py
+python -m pytest --rootdir=.. --import-mode=importlib -q tests/test_missions.py tests/test_mission_lidar.py
 python tools/check_missions.py --output logs/missions.json
 python tools/check_mission_profile.py --profile mission-perpendicular_forward \
   --output logs/mission-factory.json
@@ -158,3 +204,10 @@ later-cleared, missing and stale observations. It checks physical approach
 movement, terminal braking, body collisions and the drivable-area boundary.
 It writes trajectories and state transitions alongside the result. CARLA and
 real-sensor testing of this mission task remain separate work.
+
+The LiDAR suite separately covers free/occupied/unknown space classification,
+calibration transforms, repeated and asynchronous frames, sensor-clock offsets,
+independent-device support, occupied-first-choice fallback, unknown paths,
+new hazards after handover and braking when replanning is disabled. Its three
+complete missions include more than seven metres of approach movement and
+check the vehicle body against the drivable boundary on every tick.

@@ -129,7 +129,7 @@ class LidarParkingOccupancy:
             .reshape(-1, 2)
         )
         clear = {tuple(p) for p in unique_ground} - hazards
-        if not clear:
+        if not clear and not hazards:
             return unknown("no_observed_ground")
         r = self.resolution
         free = ground_cells_geometry(clear, r)
