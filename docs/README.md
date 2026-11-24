@@ -6,6 +6,9 @@
 - [AVLite integration and packaging](community-plugin.md)
 - [Architecture](architecture.md)
 - [Task coordination](task-coordination.md)
+- [Executor compatibility](executor-compatibility.md)
+- [Core execution API proposal](proposals/execution-api/README.md)
+- [Environment observations and core proposal](environment-observations.md)
 - [Road behavior tree](behavior-tree.md)
 - [Traffic-light classifier package](perception/classifier.md)
 - [RGB/LiDAR detector](perception/sensors.md)
@@ -16,6 +19,8 @@
 ## Tests and experiments
 
 - [Test commands and compatibility results](testing.md)
+- [24 November planning-plugin follow-up](validation/meeting-20261124.md)
+- [Main-branch verification](validation/main-20261125.md)
 - [Road and race validation](validation/road-and-race.md)
 - [Drive-to-parking mission validation](validation/missions.md)
 - [Perception validation](validation/perception.md)

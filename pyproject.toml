@@ -29,4 +29,5 @@ indent-style = "space"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--import-mode=importlib --rootdir=.."
+# Pass --rootdir=.. on the command line; pytest resolves the root before ini addopts.
+addopts = "--import-mode=importlib"

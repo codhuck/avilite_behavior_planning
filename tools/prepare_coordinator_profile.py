@@ -10,7 +10,7 @@ if not __name__.startswith("avlite.plugins."):
     import yaml
     from coordinator_demo import PLUGIN, GlobalPlan, fixture_paths
 
-    def write_profile(output, mode):
+    def write_profile(output, mode, executor="PlanningSyncExecuter"):
         output = Path(output).expanduser().resolve()
         map_path, route_path = fixture_paths(mode)
         for path in (map_path, route_path):
@@ -51,7 +51,7 @@ if not __name__.startswith("avlite.plugins."):
             },
             "c40_execution": {
                 "c40_bridge": "PlanningBasicSim",
-                "c40_executer_type": "PlanningSyncExecuter",
+                "c40_executer_type": executor,
                 "c40_perception": "PerceptionPipeline",
                 "c40_localization": "",
                 "c40_mapping": "",
@@ -87,8 +87,14 @@ if not __name__.startswith("avlite.plugins."):
         parser = argparse.ArgumentParser(description=__doc__)
         parser.add_argument("--mode", choices=["road", "race"], required=True)
         parser.add_argument("--output", type=Path, required=True)
+        parser.add_argument(
+            "--executor",
+            choices=["PlanningSyncExecuter", "SyncExecuter", "AsyncThreadedExecuter"],
+            default="PlanningSyncExecuter",
+            help="Stock 0.6.7 uses the legacy adapter; standard executors require the local execution API patch.",
+        )
         args = parser.parse_args()
-        print(write_profile(args.output, args.mode))
+        print(write_profile(args.output, args.mode, args.executor))
 
     if __name__ == "__main__":
         main()

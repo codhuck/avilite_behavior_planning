@@ -2,7 +2,7 @@
 
 The task owns selection, validation and transition reporting. Perception,
 behaviour, path generation and control remain normal AVLite strategies.
-Requests must originate on the synchronous execution thread or while paused.
+Requests use the executor transaction; threaded execution must be stopped and joined.
 """
 
 import copy
@@ -27,7 +27,7 @@ from avlite.c50_common.c51_capabilities import AnyOf, StackCapability
 
 from ..planning.dispatcher import map_mode
 from ..settings import PluginSettings
-from .switch_task import PlannerSwitchTask, SelectPlanningStack
+from .switch_task import PlannerSwitchTask, SelectPlanningStack, stack_boundary
 
 log = logging.getLogger(__name__)
 
@@ -138,7 +138,7 @@ class PlanningCoordinatorTask(TaskStrategy):
         return ["auto"] + [k for k, v in self.configurations.items() if v.map_mode == mode]
 
     def request(self, executer, strategy="auto", global_plan=None):
-        """Queue through TaskRunner; call from the tick thread or a paused UI."""
+        """Submit through TaskRunner; threaded handovers require joined workers."""
         if not getattr(executer, "call_tasks", True):
             raise ValueError("Enable execution tasks before selecting planners")
         if self not in executer.task_runner.tasks:
@@ -210,35 +210,36 @@ class PlanningCoordinatorTask(TaskStrategy):
         if not isinstance(event, SelectPlanningStrategy):
             return
         try:
-            if event.expected_map is not executer.pm.map:
-                raise ValueError("Stale selection: map changed")
-            if event.expected_planner is not executer.local_planner:
-                raise ValueError("Stale selection: planning stack changed")
-            name, config = self._resolve(executer, event.strategy)
-            route = copy.deepcopy(event.global_plan)
-            if config.map_mode == "road":
-                route.race_mode = False
-            elif not route.race_mode:
-                raise ValueError("Race configuration requires a race-mode route")
-            setting = getattr(
-                executer.local_planner, "_source_setting", PlanningSettings
-            ).model_copy(deep=True)
-            setting.c23_behavioral_strategy = config.behavior
-            setting.c23_path_strategy = config.path
-            setting.c23_velocity_strategy = config.velocity
-            switch = PlannerSwitchTask()
-            switch.execute(
-                executer,
-                SelectPlanningStack(
-                    route,
-                    event.expected_map,
-                    setting,
-                    config.global_planner,
-                    config.local_planner,
-                ),
-            )
-            # Preserve parameters for a subsequent selection from this pipeline.
-            executer.local_planner._source_setting = setting
+            with stack_boundary(executer):
+                if event.expected_map is not executer.pm.map:
+                    raise ValueError("Stale selection: map changed")
+                if event.expected_planner is not executer.local_planner:
+                    raise ValueError("Stale selection: planning stack changed")
+                name, config = self._resolve(executer, event.strategy)
+                route = copy.deepcopy(event.global_plan)
+                if config.map_mode == "road":
+                    route.race_mode = False
+                elif not route.race_mode:
+                    raise ValueError("Race configuration requires a race-mode route")
+                setting = getattr(
+                    executer.local_planner, "source_setting", PlanningSettings
+                ).model_copy(deep=True)
+                setting.c23_behavioral_strategy = config.behavior
+                setting.c23_path_strategy = config.path
+                setting.c23_velocity_strategy = config.velocity
+                switch = PlannerSwitchTask()
+                switch.execute(
+                    executer,
+                    SelectPlanningStack(
+                        route,
+                        event.expected_map,
+                        setting,
+                        config.global_planner,
+                        config.local_planner,
+                    ),
+                )
+                # Preserve parameters for a subsequent selection from this pipeline.
+                executer.local_planner.source_setting = setting
         except Exception as exc:
             # Plugin constructor/inference/validation failures are ordinary refused
             # requests. They are reported, not silently replaced with a fallback.

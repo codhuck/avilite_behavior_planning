@@ -73,11 +73,11 @@ class PlannerDispatcher(BehaviorPlanningPipeline):
     }
 
     def __init__(self, global_plan, env, setting=PlanningSettings):
-        self._source_setting = setting.model_copy(deep=True)
+        self.source_setting = setting.model_copy(deep=True)
         self.mode = map_mode(env.map)
         if self.mode == "race" and not global_plan.race_mode:
             raise ValueError("RaceMap requires a race-mode global plan")
-        selected = self._source_setting.model_copy(deep=True)
+        selected = self.source_setting.model_copy(deep=True)
         (
             selected.c23_behavioral_strategy,
             selected.c23_path_strategy,
@@ -85,7 +85,7 @@ class PlannerDispatcher(BehaviorPlanningPipeline):
         ) = self.MODES[self.mode]
         if (
             self.mode == "road"
-            and self._source_setting.c23_behavioral_strategy == "HDMapBehaviorTreePlanner"
+            and self.source_setting.c23_behavioral_strategy == "HDMapBehaviorTreePlanner"
         ):
             selected.c23_behavioral_strategy = "HDMapBehaviorTreePlanner"
         super().__init__(global_plan, env, selected)
@@ -101,7 +101,7 @@ class PlannerDispatcher(BehaviorPlanningPipeline):
 
     def set_global_plan(self, global_plan, ego_xy=None):
         # Build first: a failed selection must not partially overwrite stages.
-        candidate = type(self)(global_plan, self.pm, self._source_setting)
+        candidate = type(self)(global_plan, self.pm, self.source_setting)
         if ego_xy is not None:
             BehaviorPlanningPipeline.set_global_plan(candidate, global_plan, ego_xy)
         self.__dict__.update(candidate.__dict__)

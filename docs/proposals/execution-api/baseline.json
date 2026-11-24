@@ -1,0 +1,21 @@
+{
+  "baseline": "Local development files captured before the 24 November follow-up; not pristine upstream or stock 0.6.7",
+  "files": {
+    "avlite/c10_perception/c11_perception_model.py": {
+      "before_sha256": "6b8a88733400659d21f9ba85acffd630bca8cf9bc65fd9865e0e869f52aae2bd",
+      "after_sha256": "7008aa0671cf25d067417b37d6a537e461e24d48b3a07294df8f9c9c0bda0bb5"
+    },
+    "avlite/c40_execution/c42_execution_strategy.py": {
+      "before_sha256": "faceb603b617dd44c5ef21adb989a68d7964f64c63378dd534688049ccc37b7a",
+      "after_sha256": "2b18f3ee09a8999f1e67577db425396e479610eb9fd3793880fcf5e8fd7bde7e"
+    },
+    "avlite/c40_execution/c44_sync_executer.py": {
+      "before_sha256": "bf8a9d7c91369abb1ff7ab829b124416f220eb1dd42e9ebeff1c1fde9047816f",
+      "after_sha256": "1b05dc3a240e15d66d2aa334aa2f47f1710ca03804f352d2a7f2de460fcc3f2f"
+    },
+    "avlite/c40_execution/c45_async_threaded_executer.py": {
+      "before_sha256": "6b7e6092c7ed6198d105450f512930469bbd914726c46317358b68dd1867919b",
+      "after_sha256": "30ba9a0b59f1389dd67218dc784f5c472f12c21aad6958b4a5116e14bec96a46"
+    }
+  }
+}

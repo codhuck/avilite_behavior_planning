@@ -1,0 +1,616 @@
+--- a/avlite/c10_perception/c11_perception_model.py
++++ b/avlite/c10_perception/c11_perception_model.py
+@@ -40,6 +40,8 @@
+     map: Optional[Map] = None
+ 
+     occupancy_map: Optional[OccupancyMap] = None
++
++    environment_observation: object | None = None
+ 
+     # Raw LiDAR points that passed segmentation + range gating (diagnostic overlay)
+     detection_clusters: Optional[np.ndarray] = None
+@@ -64,6 +66,8 @@
+         self.agent_vehicles = []
+         self.prediction = None
+         self.occupancy_map = None
++        self.environment_observation = None
++        self.regulatory_observation = None
+         self.stack_event = None
+ 
+ 
+--- a/avlite/c40_execution/c42_execution_strategy.py
++++ b/avlite/c40_execution/c42_execution_strategy.py
+@@ -1,6 +1,8 @@
+ from __future__ import annotations
+ 
+ import logging
++from contextlib import contextmanager
++from threading import RLock
+ from abc import ABC, abstractmethod
+ from typing import Optional
+ 
+@@ -16,6 +18,7 @@
+ )
+ from avlite.c40_execution.c43_task_strategy import (
+     ExecutionReset,
++    ExecutionStarted,
+     ExecutionStopped,
+     StackEvent,
+     TaskPlacement,
+@@ -81,6 +84,10 @@
+         self._localization_fps_tracker = FpsTracker()
+ 
+         self.stopped = False
++        self.execution_lock = RLock()
++        self._execution_started = False
++        self._planning_invalidated = False
++        self._perception_invalidated = False
+ 
+         self._localization_missing_warned = False
+ 
+@@ -92,6 +99,30 @@
+         return self.pm.ego_vehicle
+ 
+     # --- public API ---
++
++    @contextmanager
++    def stack_update(self):
++        """Guard local stack publication. Remote executors must implement their own protocol."""
++        raise ValueError(f"{type(self).__name__} does not support local stack replacement")
++        yield
++
++    def start_execution(self):
++        """Deliver startup tasks once per reset, before workers can actuate."""
++        if not self._execution_started and getattr(self, "call_tasks", True):
++            self.task_runner.notify(ExecutionStarted())
++            self._execution_started = True
++
++    def invalidate_planning(self):
++        """Discard the previous command until the replacement planner has run."""
++        self._last_cmd = None
++        self._planning_invalidated = True
++
++    def refresh_pipeline(self):
++        """Require fresh observations and a plan after a paused perception change."""
++        if not self.stopped:
++            raise ValueError("Pause execution before refreshing the pipeline")
++        self.invalidate_planning()
++        self._perception_invalidated = True
+ 
+     def dispatch_task(self, task: TaskStrategy, event: StackEvent | None = None,) -> None:
+         """Run a due task, honoring :attr:`TaskStrategy.placement` when possible.
+@@ -163,6 +194,9 @@
+             self.controller.reset()
+         self.elapsed_real_time = 0
+         self.elapsed_sim_time = 0
++        self._execution_started = False
++        self._planning_invalidated = True
++        self._perception_invalidated = self.perception is not None
+         self._last_cmd = None
+         self._last_sim_wall_t = None
+         self.perception_fps = 0.0
+@@ -335,6 +369,7 @@
+         self.pm.simulation_time = float(self.elapsed_sim_time)
+         self.perception.perceive(perception_model=self.pm, sensors=sensors)
+ 
++        self._perception_invalidated = False
+         self.perception_fps = self._perception_fps_tracker.tick()
+         # Harvest optional stack_event stamp on PerceptionModel (notify once, then clear).
+         if self.pm.stack_event is not None:
+@@ -346,7 +381,11 @@
+         """Run one planning iteration (replan) on the caller-supplied tick snapshot."""
+         if not self.local_planner:
+             return
++        if self._perception_invalidated:
++            return
++        self.pm.simulation_time = float(self.elapsed_sim_time)
+         self.local_planner.replan(perception_model=self.pm, sensors=sensors)
++        self._planning_invalidated = False
+         self.planner_fps = self._planner_fps_tracker.tick()
+         # Harvest optional stack_event stamps from plan artifacts (notify once, then clear).
+         try:
+@@ -370,7 +409,7 @@
+ 
+         Uses the caller-supplied tick snapshot.
+         """
+-        if not self.controller:
++        if not self.controller or self._planning_invalidated or self._perception_invalidated:
+             return
+         if not self._can_actuate():
+             return
+@@ -389,7 +428,8 @@
+ 
+     def _simulate_step(self, dt: float) -> None:
+         """Apply held command to the world for one integration step (ZOH)."""
+-        if self._last_cmd is None or not self._can_actuate():
++        if (self._last_cmd is None or self._planning_invalidated
++                or self._perception_invalidated or not self._can_actuate()):
+             return
+         self.world.control_ego_state(self._last_cmd, dt=dt)
+ 
+--- a/avlite/c40_execution/c44_sync_executer.py
++++ b/avlite/c40_execution/c44_sync_executer.py
+@@ -1,4 +1,5 @@
+ import logging
++from contextlib import contextmanager
+ import time
+ 
+ from avlite.c10_perception.c11_perception_model import PerceptionModel
+@@ -49,25 +50,11 @@
+         self.__perception_last_time = -1e9
+ 
+ 
+-    def refresh_pipeline(self):
+-        """Schedule fresh sensor stages before control after a stopped handover."""
+-        if not self.stopped:
+-            raise ValueError("Pause execution before refreshing the pipeline")
+-        self.__planner_last_time = float("-inf")
+-        self.__controller_last_time = float("-inf")
+-        self.__localization_last_time = float("-inf")
+-        self.__perception_last_time = float("-inf")
+-        self._last_cmd = None
+-
+-    def invalidate_planning(self):
+-        """At a synchronous handover boundary, require a new plan and command.
+-
+-        Call only on the execution thread or while the tick loop is paused.
+-        Unlike refresh_pipeline, this does not replace or reset perception.
+-        """
+-        self.__planner_last_time = float("-inf")
+-        self.__controller_last_time = float("-inf")
+-        self._last_cmd = None
++    @contextmanager
++    def stack_update(self):
++        """Serialize GUI requests with ticks; same-thread task events are reentrant."""
++        with self.execution_lock:
++            yield
+ 
+     def step(
+         self,
+@@ -87,117 +74,122 @@
+         pace_sim=True,
+     ) -> None:
+         """ Executes a single step of the simulation, including planning, control, and perception. """
+-        self.stopped = False
+-        self.call_tasks = call_tasks
+-
+-        pln_time_txt, cn_time_txt, pr_time_txt, loc_time_txt, sim_time_txt = "", "", "", "", ""
+-        t0 = time.time()
+-
+-        # Ground-truth localization bypasses the localization strategy entirely.
+-        gt_localization = is_world_stack_capability_enabled(StackCapability.LOCALIZATION)
+-
+-        # Resolve every pacing gate before running any stage, so the tick can take a
+-        # single sensor snapshot and hand the same world instant to each stage. Gates
+-        # include module presence so an unassembled stage never triggers a fetch.
+-        do_localize = (
+-            call_localize
+-            and self.localization is not None
+-            and not gt_localization
+-            and self.elapsed_sim_time - self.__localization_last_time >= localization_dt
+-        )
+-        do_perceive = (
+-            call_perceive
+-            and self.perception is not None
+-            and (
+-                (not pace_perception)
+-                or (self.elapsed_sim_time - self.__perception_last_time >= perception_dt)
+-            )
+-        )
+-        do_replan = (
+-            call_replan
+-            and self.local_planner is not None
+-            and (
+-                (not pace_replan)
+-                or (self.elapsed_sim_time - self.__planner_last_time >= replan_dt)
+-            )
+-        )
+-        do_control = (
+-            call_control
+-            and self.controller is not None
+-            and (
+-                (not pace_control)
+-                or (self.elapsed_sim_time - self.__controller_last_time >= control_dt)
+-            )
+-        )
+-
+-        sensors = (
+-            self.world.get_sensor_frame()
+-            if (do_localize or do_perceive or do_replan or do_control)
+-            else None
+-        )
+-
+-        # Pose update: GT world → PM, or localization strategy → PM (mutually exclusive).
+-        t_loc = time.time()
+-        if gt_localization:
+-            self.pm.ego_vehicle.copy_from(self.world.get_ego_state())
+-        elif do_localize:
+-            self.__localization_last_time = self.elapsed_sim_time
+-            self._localization_step(sensors)
+-            loc_time_txt = f" LOC: {(time.time() - t_loc):.4f} sec,"
+-
+-        # Perceive first so that planning and the visualization both operate on the
+-        # same perception snapshot. Running perception after replan caused the planner
+-        # to react to the previous frame's obstacles while the UI rendered the new
+-        # perception model, making obstacles appear "detected but not visualized".
+-        t2 = time.time()
+-        if do_perceive:
+-            self.__perception_last_time = self.elapsed_sim_time
+-            self._perception_step(sensors)
+-            pr_time_txt = f" PR: {(time.time() - t2):.4f} sec,"
+-
+-        if do_replan:
+-            self.__planner_last_time = self.elapsed_sim_time
+-            self._replan_step(sensors)
+-            pln_time_txt = f" P: {(time.time() - t0):.2} sec,"
+-
+-        if self.local_planner:
+-            self.local_planner.step(self.pm.ego_vehicle)
+-
+-        t1 = time.time()
+-        if do_control:
+-            self.__controller_last_time = self.elapsed_sim_time
+-            self._control_step(sim_dt, sensors)
+-            cn_time_txt = f"C: {(time.time() - t1):.4f} sec,"
+-
+-        # Free-run: advance sim and real by the same wall interval so the UI clocks match.
+-        # Paced: fixed sim_dt; real time is measured separately over the full step.
+-        # Stall cap is 1s (debugger pauses) — do not clamp to ~0.05s or UI redraws make sim lag real.
+-        now = time.time()
+-        if pace_sim:
+-            dt = sim_dt
+-            self._simulate_step(dt)
+-            self.elapsed_sim_time += dt
+-            t_end = time.time()
+-            if self.__prev_exec_time is not None:
+-                self.elapsed_real_time += t_end - self.__prev_exec_time
+-            self.__prev_exec_time = t_end
+-        else:
+-            if self._last_sim_wall_t is None:
+-                self._last_sim_wall_t = now
+-            else:
+-                dt = max(1e-4, min(now - self._last_sim_wall_t, 1.0))
+-                self._last_sim_wall_t = now
++        with self.execution_lock:
++            self.stopped = False
++            self.call_tasks = call_tasks
++            self.start_execution()
++
++            pln_time_txt, cn_time_txt, pr_time_txt, loc_time_txt, sim_time_txt = "", "", "", "", ""
++            t0 = time.time()
++
++            # Ground-truth localization bypasses the localization strategy entirely.
++            gt_localization = is_world_stack_capability_enabled(StackCapability.LOCALIZATION)
++
++            # Resolve every pacing gate before running any stage, so the tick can take a
++            # single sensor snapshot and hand the same world instant to each stage. Gates
++            # include module presence so an unassembled stage never triggers a fetch.
++            do_localize = (
++                call_localize
++                and self.localization is not None
++                and not gt_localization
++                and self.elapsed_sim_time - self.__localization_last_time >= localization_dt
++            )
++            do_perceive = (
++                call_perceive
++                and self.perception is not None
++                and (
++                    self._perception_invalidated
++                    or (not pace_perception)
++                    or (self.elapsed_sim_time - self.__perception_last_time >= perception_dt)
++                )
++            )
++            do_replan = (
++                call_replan
++                and self.local_planner is not None
++                and (
++                    self._planning_invalidated
++                    or (not pace_replan)
++                    or (self.elapsed_sim_time - self.__planner_last_time >= replan_dt)
++                )
++            )
++            do_control = (
++                call_control
++                and self.controller is not None
++                and (
++                    self._planning_invalidated
++                    or (not pace_control)
++                    or (self.elapsed_sim_time - self.__controller_last_time >= control_dt)
++                )
++            )
++
++            sensors = (
++                self.world.get_sensor_frame()
++                if (do_localize or do_perceive or do_replan or do_control)
++                else None
++            )
++
++            # Pose update: GT world → PM, or localization strategy → PM (mutually exclusive).
++            t_loc = time.time()
++            if gt_localization:
++                self.pm.ego_vehicle.copy_from(self.world.get_ego_state())
++            elif do_localize:
++                self.__localization_last_time = self.elapsed_sim_time
++                self._localization_step(sensors)
++                loc_time_txt = f" LOC: {(time.time() - t_loc):.4f} sec,"
++
++            # Perceive first so that planning and the visualization both operate on the
++            # same perception snapshot. Running perception after replan caused the planner
++            # to react to the previous frame's obstacles while the UI rendered the new
++            # perception model, making obstacles appear "detected but not visualized".
++            t2 = time.time()
++            if do_perceive:
++                self.__perception_last_time = self.elapsed_sim_time
++                self._perception_step(sensors)
++                pr_time_txt = f" PR: {(time.time() - t2):.4f} sec,"
++
++            if do_replan:
++                self.__planner_last_time = self.elapsed_sim_time
++                self._replan_step(sensors)
++                pln_time_txt = f" P: {(time.time() - t0):.2} sec,"
++
++            if self.local_planner:
++                self.local_planner.step(self.pm.ego_vehicle)
++
++            t1 = time.time()
++            if do_control:
++                self.__controller_last_time = self.elapsed_sim_time
++                self._control_step(sim_dt, sensors)
++                cn_time_txt = f"C: {(time.time() - t1):.4f} sec,"
++
++            # Free-run: advance sim and real by the same wall interval so the UI clocks match.
++            # Paced: fixed sim_dt; real time is measured separately over the full step.
++            # Stall cap is 1s (debugger pauses) — do not clamp to ~0.05s or UI redraws make sim lag real.
++            now = time.time()
++            if pace_sim:
++                dt = sim_dt
+                 self._simulate_step(dt)
+                 self.elapsed_sim_time += dt
+-                self.elapsed_real_time += dt
+-
+-        self.task_runner.step(self)
+-
+-        log.debug(
+-            "Step | %s %s %s %s %s | real=%.3f sim=%.3f",
+-            pln_time_txt, cn_time_txt, loc_time_txt, pr_time_txt, sim_time_txt,
+-            self.elapsed_real_time, self.elapsed_sim_time,
+-        )
++                t_end = time.time()
++                if self.__prev_exec_time is not None:
++                    self.elapsed_real_time += t_end - self.__prev_exec_time
++                self.__prev_exec_time = t_end
++            else:
++                if self._last_sim_wall_t is None:
++                    self._last_sim_wall_t = now
++                else:
++                    dt = max(1e-4, min(now - self._last_sim_wall_t, 1.0))
++                    self._last_sim_wall_t = now
++                    self._simulate_step(dt)
++                    self.elapsed_sim_time += dt
++                    self.elapsed_real_time += dt
++
++            self.task_runner.step(self)
++
++            log.debug(
++                "Step | %s %s %s %s %s | real=%.3f sim=%.3f",
++                pln_time_txt, cn_time_txt, loc_time_txt, pr_time_txt, sim_time_txt,
++                self.elapsed_real_time, self.elapsed_sim_time,
++            )
+ 
+ 
+     def reset(self):
+--- a/avlite/c40_execution/c45_async_threaded_executer.py
++++ b/avlite/c40_execution/c45_async_threaded_executer.py
+@@ -11,6 +11,7 @@
+ from avlite.c50_common.c51_capabilities import StackCapability
+ 
+ import threading
++from contextlib import contextmanager
+ import time
+ import logging
+ 
+@@ -78,6 +79,14 @@
+ 
+         self.create_threads()
+ 
++    @contextmanager
++    def stack_update(self):
++        """A paused executor is writable only after every worker has exited."""
++        with self.execution_lock:
++            if self.threads_started or any(t.is_alive() for t in self.threads):
++                raise ValueError("Stop and join all executor workers before replacing the stack")
++            yield
++
+     def step(
+         self,
+         perception_dt=0.01,
+@@ -95,48 +104,49 @@
+         pace_control=True,
+         pace_sim=True,
+     ):
+-        self.perception_dt = perception_dt
+-        self.control_dt = control_dt
+-        self.replan_dt = replan_dt
+-        self.localization_dt = localization_dt
+-        self.sim_dt = sim_dt
+-        self.call_replan = call_replan
+-        self.call_control = call_control
+-        self.call_perceive = call_perceive
+-        self.call_tasks = call_tasks
+-        self.call_localize = call_localize
+-        self.pace_perception = pace_perception
+-        self.pace_replan = pace_replan
+-        self.pace_control = pace_control
+-        self.pace_sim = pace_sim
+-
+-        if not self.threads_started:
+-            log.info(f"Threads not started yet. Creating and starting threads.")
+-            self.create_threads()
+-            self.start_threads()
+-            return
+-        elif self.threads_started and all(not t.is_alive() for t in self.threads):
+-            log.warning(f"All threads are dead. Recreating and starting threads.")
+-            self.stop()
+-            self.create_threads()
+-            self.start_threads()
+-            return
+-        elif (
+-            self.threads_started
+-            and (
+-                (self.planner_thread and call_replan != self.planner_thread.is_alive())
+-                or (self.controller_thread and call_control != self.controller_thread.is_alive())
+-            )
+-        ):  # or call_perceive != (self.perception_thread.is_alive() if self.perception_thread else False):
+-
+-            log.error( f"Some threads are dead: {self.planner_thread.is_alive() if self.planner_thread else 'None'}, Controller status: {self.controller_thread.is_alive() if self.controller_thread else 'None'} . Call stop() to terminate all threads.")
+-            self.create_threads()
+-            self.start_threads()
+-            return
+-
+-        # delta_t_exec = time.time() - self.__prev_exec_time if self.__prev_exec_time is not None else 0
+-        # self.__prev_exec_time = time.time()
+-        # self.elapsed_real_time += delta_t_exec
++        with self.execution_lock:
++            self.perception_dt = perception_dt
++            self.control_dt = control_dt
++            self.replan_dt = replan_dt
++            self.localization_dt = localization_dt
++            self.sim_dt = sim_dt
++            self.call_replan = call_replan
++            self.call_control = call_control
++            self.call_perceive = call_perceive
++            self.call_tasks = call_tasks
++            self.call_localize = call_localize
++            self.pace_perception = pace_perception
++            self.pace_replan = pace_replan
++            self.pace_control = pace_control
++            self.pace_sim = pace_sim
++
++            if not self.threads_started:
++                log.info(f"Threads not started yet. Creating and starting threads.")
++                self.create_threads()
++                self.start_threads()
++                return
++            elif self.threads_started and all(not t.is_alive() for t in self.threads):
++                log.warning(f"All threads are dead. Recreating and starting threads.")
++                self.stop()
++                self.create_threads()
++                self.start_threads()
++                return
++            elif (
++                self.threads_started
++                and (
++                    (self.planner_thread and call_replan != self.planner_thread.is_alive())
++                    or (self.controller_thread and call_control != self.controller_thread.is_alive())
++                )
++            ):  # or call_perceive != (self.perception_thread.is_alive() if self.perception_thread else False):
++
++                log.error( f"Some threads are dead: {self.planner_thread.is_alive() if self.planner_thread else 'None'}, Controller status: {self.controller_thread.is_alive() if self.controller_thread else 'None'} . Call stop() to terminate all threads.")
++                self.create_threads()
++                self.start_threads()
++                return
++
++            # delta_t_exec = time.time() - self.__prev_exec_time if self.__prev_exec_time is not None else 0
++            # self.__prev_exec_time = time.time()
++            # self.elapsed_real_time += delta_t_exec
+ 
+     def worker_planning(self):
+         log.info(f"Plan Worker Started")
+@@ -159,7 +169,7 @@
+                 do_replan = (
+                     not replan_stalled
+                     and self.local_planner is not None
+-                    and ((not self.pace_replan) or (dt > self.replan_dt))
++                    and (self._planning_invalidated or (not self.pace_replan) or (dt > self.replan_dt))
+                 )
+ 
+                 # Localization owns PM ego only when GT localization is not enabled.
+@@ -179,13 +189,16 @@
+                     if dt_p > 10 * self.perception_dt:
+                         self._perception_fps_tracker.last = t1
+                     else:
+-                        do_perceive = (not self.pace_perception) or (dt_p >= self.perception_dt)
++                        do_perceive = self._perception_invalidated or (not self.pace_perception) or (dt_p >= self.perception_dt)
+ 
+                 sensors = (
+                     self.world.get_sensor_frame()
+                     if (do_replan or do_localize or do_perceive)
+                     else None
+                 )
++
++                if do_perceive:
++                    self._perception_step(sensors)
+ 
+                 if do_replan:
+                     self.__planner_last_step_time = time.time()
+@@ -210,12 +223,6 @@
+                         __localize_last_t = t1
+                     except Exception as e:
+                         log.error(f"Error in localization step: {e}", exc_info=True)
+-
+-                if do_perceive:
+-                    try:
+-                        self._perception_step(sensors)
+-                    except Exception as e:
+-                        log.error(f"Error in perception step: {e}", exc_info=True)
+ 
+                 if self.pace_replan:
+                     time.sleep(max(0, self.replan_dt - (time.time() - t1)))
+@@ -374,29 +381,31 @@
+ 
+ 
+     def start_threads(self):
+-        if self.threads_started:
+-            log.warning("Threads already started. Call stop() to restart.")
+-            return
+-        if len(self.threads) == 0:
+-            log.warning("No threads created to start. Call create_threads() first.")
+-            return
+-
+-        self.stopped = False
+-        self._last_sim_wall_t = None
+-
+-        t1 = time.time()
+-        log.info(f"Starting Planner Thread...")
+-        self.__planner_start_time = time.time()
+-        if self.planner_thread:
+-            self.planner_thread.start()
+-
+-        log.info(f"Starting Controller Thread...")
+-        if self.controller_thread:
+-            self.controller_thread.start()
+-
+-        if not self._combined_perception_planning and self.perception_thread:
+-            log.info(f"Starting Perception Thread...")
+-            self.perception_thread.start()
+-
+-        self.threads_started = True
+-        log.info(f"Threads started in {time.time()-t1:.3f} s")
++        with self.execution_lock:
++            if self.threads_started:
++                log.warning("Threads already started. Call stop() to restart.")
++                return
++            if len(self.threads) == 0:
++                log.warning("No threads created to start. Call create_threads() first.")
++                return
++
++            self.start_execution()
++            self.stopped = False
++            self._last_sim_wall_t = None
++
++            t1 = time.time()
++            log.info(f"Starting Planner Thread...")
++            self.__planner_start_time = time.time()
++            if self.planner_thread:
++                self.planner_thread.start()
++
++            log.info(f"Starting Controller Thread...")
++            if self.controller_thread:
++                self.controller_thread.start()
++
++            if not self._combined_perception_planning and self.perception_thread:
++                log.info(f"Starting Perception Thread...")
++                self.perception_thread.start()
++
++            self.threads_started = True
++            log.info(f"Threads started in {time.time()-t1:.3f} s")

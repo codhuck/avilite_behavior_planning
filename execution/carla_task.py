@@ -13,6 +13,7 @@ from pathlib import Path
 
 from avlite.c40_execution.c43_task_strategy import TaskStrategy
 
+from ..perception.environment import CROSSING_OBSERVATIONS, SIGNAL_OBSERVATIONS
 from ..perception.observations import RegulatoryObservation
 from ..settings import PluginSettings
 
@@ -33,6 +34,14 @@ def observe_carla(world, simulation_time):
 
 class CarlaRegulatoryTask(TaskStrategy):
     """Refresh observations after each tick and record decisions/actual motion."""
+
+    @property
+    def stack_capabilities(self):
+        return (
+            frozenset({SIGNAL_OBSERVATIONS, CROSSING_OBSERVATIONS})
+            if self.use_ground_truth
+            else frozenset()
+        )
 
     use_ground_truth = True
 

@@ -52,7 +52,7 @@ if not __name__.startswith("avlite.plugins."):
             )
         return PLUGIN / "data/coordinator_road.xodr", PLUGIN / "data/coordinator_road.json"
 
-    def create_stack(mode="road"):
+    def create_stack(mode="road", executor=None):
         # Explicit settings; never load the user's active profile or launch a bridge.
         ExecutionSettings.c41_world_stack_capabilities = ["LOCALIZATION", "DETECTION", "TRACKING"]
         ExecutionSettings.c41_world_capabilities = None
@@ -72,7 +72,7 @@ if not __name__.startswith("avlite.plugins."):
         tasks = [task]
         if mode == "race":
             tasks.append(plugin.RaceTrafficTask())
-        ex = plugin.PlanningSyncExecuter(
+        ex = (executor or plugin.PlanningSyncExecuter)(
             pm,
             perception=PerceptionPipeline(pm),
             world=world,

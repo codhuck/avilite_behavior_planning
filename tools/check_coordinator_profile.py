@@ -8,6 +8,7 @@ if not __name__.startswith("avlite.plugins."):
     import importlib
     import json
     import sys
+    import time
     from pathlib import Path
 
     PLUGIN = Path(__file__).resolve().parents[1]
@@ -16,14 +17,19 @@ if not __name__.startswith("avlite.plugins."):
 
     from avlite.c40_execution.c49_settings import ExecutionSettings as Settings
     from avlite.c60_apps.c62_factory import executor_factory, load_stack_settings
+    from avlite.c60_apps.c65_setting_utils import profile_file_path
 
     def main():
         parser = argparse.ArgumentParser(description=__doc__)
-        parser.add_argument("--profile", required=True)
+        parser.add_argument(
+            "--profile", required=True, help="Profile name without .yaml; uses AVLITE_CONFIG_DIR"
+        )
         parser.add_argument("--output", type=Path, required=True)
         args = parser.parse_args()
         if args.output.exists():
             parser.error("Output exists; choose another path")
+        if not Path(profile_file_path(args.profile)).is_file():
+            parser.error("Profile not found; pass its name without .yaml and set AVLITE_CONFIG_DIR")
         # Match the normal application bootstrap before community discovery.
         importlib.import_module("avlite.plugins")
         load_stack_settings(args.profile, load_plugins=True)
@@ -48,10 +54,23 @@ if not __name__.startswith("avlite.plugins."):
             )
             source = Path(sys.modules[type(task).__module__].__file__).resolve()
             assert source == PLUGIN / "execution/coordinator.py", source
-            for _ in range(60):
-                ex.step(sim_dt=0.05, perception_dt=0.05, control_dt=0.05, replan_dt=0.05)
+            deadline = time.monotonic() + 20
+            while ex.elapsed_sim_time < 3.0:
+                if time.monotonic() >= deadline:
+                    raise TimeoutError("Executor did not advance three simulation seconds")
+                ex.step(
+                    sim_dt=0.05,
+                    perception_dt=0.05,
+                    control_dt=0.05,
+                    replan_dt=0.05,
+                    call_perceive=True,
+                )
+                if ex.ui_poll_delay is not None:
+                    time.sleep(min(ex.ui_poll_delay, 0.02))
             assert task.last_result["status"] == "selected", task.last_result
             assert ex.ego_state.velocity > 0.05
+            if task.active_strategy == "race":
+                assert len(ex.pm.agent_vehicles) == 2, "Scripted rivals did not reach perception"
             assert "carla" not in sys.modules
             result = dict(
                 passed=True,

@@ -69,7 +69,13 @@ checkout location, use its path or generate a profile as shown above.
 
 Change startup settings with execution stopped, then reload the stack. Mission
 tasks can also request a stopped handover through `PlanningCoordinatorTask`.
-See [task coordination](docs/task-coordination.md) for the API.
+See [task coordination](docs/task-coordination.md) for the API and
+[executor compatibility](docs/executor-compatibility.md) for ordinary sync and
+paused threaded execution on the local development core.
+
+Sensor results use an optional [environment observation contract](docs/environment-observations.md).
+Road planners check for signal/crossing capabilities; generic object detection
+alone is insufficient. The shared-core interface remains a proposal.
 
 ## Sensors and parking
 

@@ -18,13 +18,16 @@ Road/race transitions within one map are not implemented.
 
 On stock AVLite 0.6.7, select `PlanningSyncExecuter`. The generated BasicSim
 profiles also select `BehaviorStanleyController` and `PlanningBasicSim`.
-See [runtime adapters](community-plugin.md#runtime-adapters).
+See [runtime adapters](community-plugin.md#runtime-adapters). The local core also
+supports ordinary sync and paused threaded execution through the
+[executor transaction API](executor-compatibility.md).
 
 ## Startup
 
 Add one `PlanningCoordinatorTask` to `c40_execution_tasks` and set
-`coordinator_initial_strategy` in plugin settings. `PlanningSyncExecuter` emits
-`ExecutionStarted` on the first enabled task tick.
+`coordinator_initial_strategy` in plugin settings. The executor emits
+`ExecutionStarted` before its first enabled task tick or worker launch.
+The legacy stock adapter supplies that lifecycle for AVLite 0.6.7.
 
 The coordinator selects once. Resuming preserves dwell timers and leaves a
 stack installed by another task, such as parking, in place. Reset clears the
@@ -34,6 +37,7 @@ selection history. A failed initial selection raises before driving starts.
 
 Call from a synchronous execution task or from the UI while paused. The vehicle
 must be stopped; pausing execution alone does not satisfy the speed checks.
+Threaded executors must also finish joining every worker.
 
 ```python
 from avlite.plugins.avlite_behavior_hdmap import PlanningCoordinatorTask
@@ -59,13 +63,14 @@ Before installing the candidate, the task checks:
 
 A successful handover resets controller state, clears the held command and
 forces fresh planning/control on the next enabled tick. Keep both stages enabled
-when resuming. A rejected request keeps the current planners.
+when resuming. A rejected request keeps the current planners and observations. Candidate
+construction uses an isolated PM snapshot.
 
 `last_result` contains the latest outcome; `history` retains up to 100 entries.
 The task emits `PlanningStrategySelected` or `PlanningStrategyRejected` for
 other tasks to consume. A rejection reports the reason; it does not apply brakes
-or restart execution. Concurrent requests from arbitrary worker threads are
-unsupported.
+or restart execution. Threaded requests during execution are rejected; request again after stopping
+and joining workers.
 
 ## Add a configuration
 

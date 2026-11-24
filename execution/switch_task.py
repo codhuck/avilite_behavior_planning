@@ -1,7 +1,8 @@
-"""Replace a complete planning stack at a synchronous execution boundary."""
+"""Replace a planning stack inside the executor-owned update boundary."""
 
 import copy
 import logging
+from contextlib import nullcontext
 from dataclasses import dataclass
 
 import numpy as np
@@ -16,6 +17,18 @@ from avlite.c50_common.c51_capabilities import satisfies_requirements
 from ..planning.dispatcher import GlobalPlannerDispatcher
 
 log = logging.getLogger(__name__)
+
+
+def stack_boundary(executer):
+    """Use the executor's public transaction; retain the 0.6.7 sync adapter."""
+    boundary = getattr(executer, "stack_update", None)
+    if callable(boundary):
+        return boundary()
+    if isinstance(executer, SyncExecuter) and callable(
+        getattr(executer, "invalidate_planning", None)
+    ):
+        return nullcontext()
+    raise ValueError("Executor has no stack_update protocol; pause or use a compatible executor")
 
 
 def validate_world_requirements(executer, modules):
@@ -64,83 +77,88 @@ class PlannerSwitchTask(TaskStrategy):
     def execute(self, executer, event=None):
         if not isinstance(event, SelectPlanningStack):
             return
-        # Worker-thread executers need their own synchronization protocol.
-        if not isinstance(executer, SyncExecuter):
-            raise ValueError("PlannerSwitchTask requires SyncExecuter")
-        if not callable(getattr(executer, "invalidate_planning", None)):
-            raise ValueError("Select PlanningSyncExecuter for planner handovers on stock AVLite")
-        if event.expected_map is not executer.pm.map:
-            raise ValueError("Stale planner switch: map changed")
-        ego = executer.pm.ego_vehicle
-        if not np.isfinite(ego.velocity) or abs(ego.velocity) > 0.1:
-            raise ValueError("Stop the vehicle before replacing the planning stack")
-        # PM can describe the beginning of the tick; the world has already moved.
-        world_speed = executer.world.get_ego_state().velocity
-        if not np.isfinite(world_speed) or abs(world_speed) > 0.1:
-            raise ValueError("Stop the vehicle before replacing the planning stack")
-        if not np.isfinite([ego.x, ego.y, ego.theta]).all():
-            raise ValueError("Invalid ego pose")
-        route = copy.deepcopy(event.global_plan)
-        points = np.asarray(route.path)
-        if (
-            points.ndim != 2
-            or points.shape[1] != 2
-            or len(points) < 2
-            or not np.isfinite(points).all()
-        ):
-            raise ValueError("Planner switch requires a finite nonempty route")
-        if np.min(np.linalg.norm(points - [ego.x, ego.y], axis=1)) > 5.0:
-            raise ValueError("New route is too far from the current vehicle")
-        for values in (route.velocity, route.left_boundary_d, route.right_boundary_d):
-            if not np.isfinite(np.asarray(values)).all():
-                raise ValueError("Route speed and boundaries must be finite")
-        setting = event.planning_settings
-        if setting is None:
-            setting = getattr(executer.local_planner, "_source_setting", PlanningSettings)
-        # Select explicit AVLite-registered strategies; unknown names never fall back.
-        global_cls = GlobalPlannerStrategy.registry.get(event.global_strategy)
-        local_cls = LocalPlanningStrategy.registry.get(event.local_strategy)
-        if global_cls is None or local_cls is None:
-            raise ValueError("Unknown global or local planning strategy")
-        global_planner = global_cls(executer.pm.map)
-        global_planner.global_plan = route
-        if isinstance(global_planner, GlobalPlannerDispatcher):
-            global_planner.delegate.global_plan = route
-        local_planner = local_cls(route, executer.pm, setting.model_copy(deep=True))
-        local_planner.set_global_plan(route, ego_xy=(ego.x, ego.y))
-        # Validate using a shallow executor view before publishing either pointer.
-        candidate = copy.copy(executer)
-        candidate.global_planner = global_planner
-        candidate.local_planner = local_planner
-        candidate.validate_stack()
-        validate_world_requirements(executer, (global_planner, local_planner))
-        local_planner.step(ego)
-        local_planner.replan(executer.pm)
-        plan = local_planner.get_local_plan()
-        if (
-            plan is None
-            or not len(plan.path)
-            or not np.isfinite(np.asarray(plan.path)).all()
-            or not np.isfinite(np.asarray(plan.velocity)).all()
-        ):
-            raise ValueError("Selected planner produced no finite local plan")
-        if executer.controller is not None:
-            executer.controller.reset()
-        previous = type(executer.local_planner).__name__
-        executer.global_planner = global_planner
-        executer.local_planner = local_planner
-        executer.invalidate_planning()
-        self.last_result = dict(
-            previous=previous,
-            mode=getattr(local_planner, "mode", "configured"),
-            global_planner=type(getattr(global_planner, "delegate", global_planner)).__name__,
-            stages=tuple(
-                type(stage).__name__
-                for stage in getattr(local_planner, "_stages", ())
-                if stage is not None
-            ),
-        )
-        log.info("DISPATCH stack replaced: %s", self.last_result)
+        with stack_boundary(executer):
+            if event.expected_map is not executer.pm.map:
+                raise ValueError("Stale planner switch: map changed")
+            ego = executer.pm.ego_vehicle
+            if not np.isfinite(ego.velocity) or abs(ego.velocity) > 0.1:
+                raise ValueError("Stop the vehicle before replacing the planning stack")
+            # PM can describe the beginning of the tick; the world has already moved.
+            world_speed = executer.world.get_ego_state().velocity
+            if not np.isfinite(world_speed) or abs(world_speed) > 0.1:
+                raise ValueError("Stop the vehicle before replacing the planning stack")
+            if not np.isfinite([ego.x, ego.y, ego.theta]).all():
+                raise ValueError("Invalid ego pose")
+            route = copy.deepcopy(event.global_plan)
+            points = np.asarray(route.path)
+            if (
+                points.ndim != 2
+                or points.shape[1] != 2
+                or len(points) < 2
+                or not np.isfinite(points).all()
+            ):
+                raise ValueError("Planner switch requires a finite nonempty route")
+            if np.min(np.linalg.norm(points - [ego.x, ego.y], axis=1)) > 5.0:
+                raise ValueError("New route is too far from the current vehicle")
+            for values in (route.velocity, route.left_boundary_d, route.right_boundary_d):
+                if not np.isfinite(np.asarray(values)).all():
+                    raise ValueError("Route speed and boundaries must be finite")
+            setting = event.planning_settings
+            if setting is None:
+                setting = getattr(executer.local_planner, "source_setting", PlanningSettings)
+            # Select explicit AVLite-registered strategies; unknown names never fall back.
+            global_cls = GlobalPlannerStrategy.registry.get(event.global_strategy)
+            local_cls = LocalPlanningStrategy.registry.get(event.local_strategy)
+            if global_cls is None or local_cls is None:
+                raise ValueError("Unknown global or local planning strategy")
+            candidate_pm = copy.deepcopy(executer.pm, {id(executer.pm.map): executer.pm.map})
+            global_planner = global_cls(executer.pm.map)
+            global_planner.global_plan = route
+            if isinstance(global_planner, GlobalPlannerDispatcher):
+                global_planner.delegate.global_plan = route
+            local_planner = local_cls(route, candidate_pm, setting.model_copy(deep=True))
+            local_planner.set_global_plan(route, ego_xy=(ego.x, ego.y))
+            # Validate using a shallow executor view before publishing either pointer.
+            candidate = copy.copy(executer)
+            candidate.global_planner = global_planner
+            candidate.local_planner = local_planner
+            candidate.pm = candidate_pm
+            candidate.validate_stack()
+            validate_world_requirements(executer, (global_planner, local_planner))
+            local_planner.step(ego)
+            local_planner.replan(candidate_pm)
+            plan = local_planner.get_local_plan()
+            if (
+                plan is None
+                or not len(plan.path)
+                or not np.isfinite(np.asarray(plan.path)).all()
+                or not np.isfinite(np.asarray(plan.velocity)).all()
+            ):
+                raise ValueError("Selected planner produced no finite local plan")
+            bind = getattr(local_planner, "bind_perception", None)
+            if bind is not None:
+                bind(executer.pm)
+            elif hasattr(local_planner, "pm"):
+                local_planner.pm = executer.pm
+            if executer.controller is not None:
+                executer.controller.reset()
+            if hasattr(candidate_pm, "regulatory_route"):
+                executer.pm.regulatory_route = candidate_pm.regulatory_route
+            previous = type(executer.local_planner).__name__
+            executer.global_planner = global_planner
+            executer.local_planner = local_planner
+            executer.invalidate_planning()
+            self.last_result = dict(
+                previous=previous,
+                mode=getattr(local_planner, "mode", "configured"),
+                global_planner=type(getattr(global_planner, "delegate", global_planner)).__name__,
+                stages=tuple(
+                    type(stage).__name__
+                    for stage in getattr(local_planner, "stages", ())
+                    if stage is not None
+                ),
+            )
+            log.info("DISPATCH stack replaced: %s", self.last_result)
 
 
 @dataclass
@@ -173,41 +191,42 @@ class PerceptionSwitchTask(TaskStrategy):
 
         if not isinstance(event, SelectPerceptionStack):
             return
-        if not isinstance(executer, SyncExecuter):
-            raise ValueError("PerceptionSwitchTask requires SyncExecuter")
-        if not callable(getattr(executer, "refresh_pipeline", None)):
-            raise ValueError("Select PlanningSyncExecuter for perception handovers on stock AVLite")
-        if not executer.stopped or abs(executer.pm.ego_vehicle.velocity) > 0.02:
-            raise ValueError("Pause execution and stop before replacing perception")
-        if not np.isfinite(executer.pm.ego_vehicle.velocity):
-            raise ValueError("Invalid ego velocity")
-        # A paused executor can still hold a pre-tick PM snapshot. Read the
-        # current bridge speed as for planner handovers before discarding data.
-        world_speed = executer.world.get_ego_state().velocity
-        if not np.isfinite(world_speed) or abs(world_speed) > 0.02:
-            raise ValueError("Stop the vehicle before replacing perception")
-        if event.expected_map is not executer.pm.map:
-            raise ValueError("Stale perception switch: map changed")
-        perception = event.perception
-        if not isinstance(perception, PerceptionStrategy):
-            raise ValueError("Expected a PerceptionStrategy instance")
-        if perception is executer.perception:
-            raise ValueError("Construct a new perception strategy before handover")
-        if perception.perception_model is not executer.pm:
-            raise ValueError("Candidate must use the current perception model")
-        candidate = copy.copy(executer)
-        candidate.perception = perception
-        candidate.validate_stack()
-        validate_world_requirements(executer, (perception,))
-        # All refusal paths precede publication. Do not run detector inference,
-        # constructor or a third-party reset callback during this boundary.
-        executer.refresh_pipeline()
-        previous = type(executer.perception).__name__
-        executer.perception = perception
-        executer._last_cmd = None
-        executer.pm.agent_vehicles = []
-        executer.pm.static_obstacles = []
-        for field in ("regulatory_observation", "parking_observation", "parking_occupancy"):
-            setattr(executer.pm, field, None)
-        self.last_result = dict(previous=previous, current=type(perception).__name__)
-        log.info("DISPATCH perception replaced: %s", self.last_result)
+        with stack_boundary(executer):
+            if not executer.stopped or abs(executer.pm.ego_vehicle.velocity) > 0.02:
+                raise ValueError("Pause execution and stop before replacing perception")
+            if not np.isfinite(executer.pm.ego_vehicle.velocity):
+                raise ValueError("Invalid ego velocity")
+            # A paused executor can still hold a pre-tick PM snapshot. Read the
+            # current bridge speed as for planner handovers before discarding data.
+            world_speed = executer.world.get_ego_state().velocity
+            if not np.isfinite(world_speed) or abs(world_speed) > 0.02:
+                raise ValueError("Stop the vehicle before replacing perception")
+            if event.expected_map is not executer.pm.map:
+                raise ValueError("Stale perception switch: map changed")
+            perception = event.perception
+            if not isinstance(perception, PerceptionStrategy):
+                raise ValueError("Expected a PerceptionStrategy instance")
+            if perception is executer.perception:
+                raise ValueError("Construct a new perception strategy before handover")
+            if perception.perception_model is not executer.pm:
+                raise ValueError("Candidate must use the current perception model")
+            candidate = copy.copy(executer)
+            candidate.perception = perception
+            candidate.validate_stack()
+            validate_world_requirements(executer, (perception,))
+            # All refusal paths precede publication. Do not run detector inference,
+            # constructor or a third-party reset callback during this boundary.
+            executer.refresh_pipeline()
+            previous = type(executer.perception).__name__
+            executer.perception = perception
+            executer.pm.agent_vehicles = []
+            executer.pm.static_obstacles = []
+            for field in (
+                "environment_observation",
+                "regulatory_observation",
+                "parking_observation",
+                "parking_occupancy",
+            ):
+                setattr(executer.pm, field, None)
+            self.last_result = dict(previous=previous, current=type(perception).__name__)
+            log.info("DISPATCH perception replaced: %s", self.last_result)

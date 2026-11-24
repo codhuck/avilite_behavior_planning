@@ -20,7 +20,8 @@ from shapely.geometry import LineString, Point, Polygon
 
 from ..settings import PluginSettings
 from .contract import validate_regulatory_frame
-from .observations import RegulatoryObservation
+from .environment import CROSSING_OBSERVATIONS, SIGNAL_OBSERVATIONS
+from .observations import RegulatoryObservation, environment_observation
 from .regulatory import RegulatoryKind, extract_regulatory_features
 from .traffic_light import (
     SignalPerception,
@@ -178,6 +179,10 @@ def lamp_color(rgb):
 
 
 class SensorRegulatoryDetector(DetectionStrategy):
+    stack_capabilities = DetectionStrategy.stack_capabilities | {
+        SIGNAL_OBSERVATIONS,
+        CROSSING_OBSERVATIONS,
+    }
     world_requirements = frozenset({WorldCapability.CAMERA_RGB, WorldCapability.LIDAR_3D})
 
     def __init__(self, detector=None, geometry=None, signal_classifier=None, signal_backend=None):
@@ -217,6 +222,22 @@ class SensorRegulatoryDetector(DetectionStrategy):
         self.clock_anchor = None
 
     def detect(self, perception_model=None, sensors=None, **kwargs):
+        if perception_model is None:
+            raise ValueError("SensorRegulatoryDetector requires a perception model")
+        try:
+            observation = self.observe(perception_model, sensors)
+        except Exception:
+            observation = SensorObservation(
+                float(getattr(perception_model, "simulation_time", 0.0))
+            )
+            perception_model.regulatory_observation = observation
+            perception_model.environment_observation = environment_observation(observation)
+            raise
+        perception_model.regulatory_observation = observation
+        perception_model.environment_observation = environment_observation(observation)
+        return perception_model
+
+    def observe(self, perception_model, sensors):
         pm = perception_model
         if pm is None:
             raise ValueError("SensorRegulatoryDetector requires a perception model")
@@ -227,7 +248,6 @@ class SensorRegulatoryDetector(DetectionStrategy):
         pm.agent_vehicles = []
         pm.static_obstacles = []  # no inherited GT objects
         obs = SensorObservation(now)
-        pm.regulatory_observation = obs
         if pm.map is not self.last_map:
             self.features = extract_regulatory_features(pm.map)
             self.last_map = pm.map
@@ -260,20 +280,20 @@ class SensorRegulatoryDetector(DetectionStrategy):
             self.green_streak.clear()
             self.clear_since.clear()
             obs.diagnostics = {"status": "missing_or_unsynchronised_sensors"}
-            return pm
+            return obs
         contract_error = validate_regulatory_frame(sensors)
         if contract_error is not None:
             self.green_streak.clear()
             self.clear_since.clear()
             obs.diagnostics = {"status": contract_error}
-            return pm
+            return obs
         stamp = float(camera.stamp)
         if self.last_stamp is not None and stamp <= self.last_stamp:
             # Never relabel an old image as a fresh observation or accumulate confirmations.
             self.green_streak.clear()
             self.clear_since.clear()
             obs.diagnostics = {"status": "repeated_or_out_of_order_frame"}
-            return pm
+            return obs
         self.last_stamp = stamp
         obs.sensor_stamp = stamp
         if self.clock_anchor is None:
@@ -283,7 +303,7 @@ class SensorRegulatoryDetector(DetectionStrategy):
             self.green_streak.clear()
             self.clear_since.clear()
             obs.diagnostics = {"status": "stale_or_future_frame", "capture_time": capture_time}
-            return pm
+            return obs
         obs.time = min(
             now, capture_time
         )  # CARLA float32 tick rounding must not create future observations
@@ -292,12 +312,12 @@ class SensorRegulatoryDetector(DetectionStrategy):
             self.green_streak.clear()
             self.clear_since.clear()
             obs.diagnostics = {"status": "invalid_image"}
-            return pm
+            return obs
         if np.std(rgb) < 2 or np.percentile(rgb, 95) < 15:
             self.green_streak.clear()
             self.clear_since.clear()
             obs.diagnostics = {"status": "unusable_image"}
-            return pm
+            return obs
         pose = pm.ego_vehicle.pose_matrix()  # stack localization, never sensors.base_to_map
         cloud = lidar.to_base(lidar.points)
         finite = np.isfinite(cloud[:, :3]).all(axis=1)
@@ -306,7 +326,7 @@ class SensorRegulatoryDetector(DetectionStrategy):
             self.green_streak.clear()
             self.clear_since.clear()
             obs.diagnostics = {"status": "insufficient_lidar"}
-            return pm
+            return obs
         world = cloud[:, :3] @ pose[:3, :3].T + pose[:3, 3]
         uv, depth = project(world, camera, pose)
         # Ground height from near low LiDAR returns, not a fixed vehicle-origin offset.
@@ -321,7 +341,7 @@ class SensorRegulatoryDetector(DetectionStrategy):
             self.clear_since.clear()
             log.exception("Sensor object detector failed; observations unavailable")
             obs.diagnostics = {"status": "detector_error", "error": str(exc)}
-            return pm
+            return obs
         unlocalized_person = False
         for index, d in enumerate(detections):
             x1, y1, x2, y2 = d.box
@@ -421,7 +441,7 @@ class SensorRegulatoryDetector(DetectionStrategy):
                 self.green_streak.clear()
                 self.clear_since.clear()
                 obs.diagnostics = {"status": "signal_classifier_error"}
-                return pm
+                return obs
             obs.detections.extend(
                 dict(
                     kind="signal_state",
@@ -523,4 +543,4 @@ class SensorRegulatoryDetector(DetectionStrategy):
             crossings=crossing_diagnostics,
         )
         self.last_observation = obs
-        return pm
+        return obs

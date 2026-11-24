@@ -51,15 +51,19 @@ the route, capabilities and first local plan before replacing the active pair.
 It resets controller integrators and clears the held command after acceptance.
 Moving vehicles and stale or invalid requests retain the current pair.
 
-Use `PlanningSyncExecuter` on stock AVLite. Threaded replacement requires a
-separate synchronization mechanism. The task API and lifecycle are documented
-in [task coordination](task-coordination.md).
+Use `PlanningSyncExecuter` on stock AVLite 0.6.7. The local development core also
+supports ordinary `SyncExecuter` and `AsyncThreadedExecuter`; threaded replacement
+requires all workers to have exited. See [executor compatibility](executor-compatibility.md)
+for the supported boundaries and [task coordination](task-coordination.md) for events.
 
 ## Perception
 
 `SensorRegulatoryDetector` runs image inference and geometric association, then
-publishes `RegulatoryObservation`. Behavior consumes that observation without
-calling the classifier. `SensorTelemetryTask` records it.
+publishes an immutable `EnvironmentObservation` and a legacy
+`RegulatoryObservation` for existing telemetry. Behavior consumes the shared
+snapshot without calling the classifier. Signal and crossing capabilities are
+checked against the route. See [environment observations](environment-observations.md)
+for alternate providers and the proposed core contract.
 
 `CarlaRegulatoryTask` supplies ground-truth observations for comparison
 scenarios. Do not enable it in sensor profiles. Detector failures remain unknown
@@ -79,7 +83,7 @@ Execution tasks must be enabled and the executor paused with the vehicle stopped
 
 The task checks the map, perception model and capability requirements before
 replacement. It then clears previous object lists and regulatory/parking
-observations. `PlanningSyncExecuter.refresh_pipeline()` requests fresh perception
+observations. The executor's public `refresh_pipeline()` requests fresh perception
 and planning before the next enabled control stage. Keep those stages enabled
 when resuming. Construct models and configure sensors before submitting the
 handover request.

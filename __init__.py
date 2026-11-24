@@ -28,6 +28,13 @@ from .execution.switch_task import (
 from .parking.planner import ParkingController, ParkingPlanner, ParkingRequest, ParkingType
 from .parking.visibility import VisibilityParkingPlanner
 from .perception.detector import SensorRegulatoryDetector
+from .perception.environment import (
+    CrossingOccupancy,
+    EnvironmentMarker,
+    EnvironmentObservation,
+    ObservationCapability,
+    TrafficSignal,
+)
 from .perception.regulatory import RegulatoryFeature, RegulatoryKind, extract_regulatory_features
 from .planning.dispatcher import GlobalPlannerDispatcher, PlannerDispatcher
 from .planning.global_planner import HDMapLaneFollowingPlanner
@@ -85,4 +92,13 @@ __all__ = [
     "RegulatoryFeature",
     "RegulatoryKind",
     "extract_regulatory_features",
+]
+
+
+__all__ += [
+    "EnvironmentMarker",
+    "EnvironmentObservation",
+    "TrafficSignal",
+    "CrossingOccupancy",
+    "ObservationCapability",
 ]

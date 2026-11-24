@@ -15,6 +15,8 @@ from avlite.c50_common.c51_capabilities import StackCapability
 from avlite.c50_common.c54_trajectory_tracker import slice_trajectory_horizon
 from shapely.geometry import LineString, Point, Polygon
 
+from ..perception.environment import CROSSING_OBSERVATIONS, SIGNAL_OBSERVATIONS
+from ..perception.observations import regulatory_observation
 from ..perception.regulatory import (
     RegulatoryFeature,
     RegulatoryKind,
@@ -44,7 +46,17 @@ class HDMapBehaviorPlanner(LocalBehavioralPlanningStrategy):
     """
 
     world_requirements = frozenset()
-    stack_requirements = frozenset({StackCapability.MAP_HD, StackCapability.LOCALIZATION})
+
+    @property
+    def stack_requirements(self):
+        requirements = {StackCapability.MAP_HD, StackCapability.LOCALIZATION}
+        kinds = {rule.feature.kind for rule in self.route_rules}
+        if RegulatoryKind.TRAFFIC_LIGHT in kinds:
+            requirements.add(SIGNAL_OBSERVATIONS)
+        if RegulatoryKind.CROSSWALK in kinds:
+            requirements.add(CROSSING_OBSERVATIONS)
+        return frozenset(requirements)
+
     stack_capabilities = frozenset()
 
     def __init__(self, global_plan, env):
@@ -234,15 +246,13 @@ class HDMapBehaviorPlanner(LocalBehavioralPlanningStrategy):
         ego = self.env.ego_vehicle
         ego_s, _ = self.global_plan.trajectory.convert_xy_to_sd(ego.x, ego.y)
         now = float(getattr(self.env, "simulation_time", 0.0))
-        obs = getattr(self.env, "regulatory_observation", None)
+        obs = regulatory_observation(self.env)
         fresh = obs is not None and 0 <= now - obs.time <= PluginSettings.observation_max_age
         plan.behavior = LocalBehavior.CRUISE
         plan.behavior_state, plan.behavior_reason = "CRUISE", "route_clear"
         plan.rule_id, plan.rule_distance, plan.speed_limit = None, None, None
         plan.decision_time = now
-        if getattr(obs, "source", None) == "rgb_lidar" and (
-            not fresh or obs.diagnostics.get("status") != "ok"
-        ):
+        if hasattr(obs, "diagnostics") and (not fresh or obs.diagnostics.get("status") != "ok"):
             plan.behavior = LocalBehavior.STOP
             plan.behavior_state = "PERCEPTION_STOP"
             plan.behavior_reason = "sensor_" + (

@@ -22,6 +22,21 @@ _STEP_SIGNATURE = inspect.signature(SyncExecuter.step)
 class BehaviorPlanningPipeline(LocalPlanningPipeline):
     """Propagate route, reset and perception to every registered stage."""
 
+    @property
+    def stages(self):
+        """Public access for coordination, telemetry and capability inspection."""
+        return self._stages
+
+    def bind_perception(self, perception_model):
+        self.pm = perception_model
+        for stage in self.stages:
+            for attr in ("pm", "env"):
+                if hasattr(stage, attr):
+                    setattr(stage, attr, perception_model)
+            guard = getattr(stage, "guard", None)
+            if guard is not None and hasattr(guard, "env"):
+                guard.env = perception_model
+
     def set_global_plan(self, global_plan, ego_xy=None):
         LocalPlanningStrategy.set_global_plan(self, global_plan, ego_xy=ego_xy)
         for stage in self._stages:
@@ -93,12 +108,20 @@ class PlanningSyncExecuter(SyncExecuter):
 
     def invalidate_planning(self):
         self._fresh_planning = True
-        self._last_cmd = None
+        parent = getattr(super(), "invalidate_planning", None)
+        if parent is not None:
+            parent()
+        else:
+            self._last_cmd = None
 
     def refresh_pipeline(self):
         if not self.stopped:
             raise ValueError("Pause execution before refreshing the pipeline")
-        self.invalidate_planning()
+        parent = getattr(super(), "refresh_pipeline", None)
+        if parent is not None:
+            parent()
+        else:
+            self.invalidate_planning()
         self._fresh_perception = True
 
     def step(self, *args, **kwargs):
@@ -108,7 +131,11 @@ class PlanningSyncExecuter(SyncExecuter):
         del kwargs["self"]
         self.call_tasks = kwargs["call_tasks"]
         if not self._planning_start_sent and kwargs.get("call_tasks", True):
-            self.task_runner.notify(ExecutionStarted())
+            start = getattr(super(), "start_execution", None)
+            if start is not None:
+                start()
+            else:
+                self.task_runner.notify(ExecutionStarted())
             self._planning_start_sent = True
         for task in self.task_runner.tasks:
             before_step = getattr(task, "before_step", None)
@@ -139,6 +166,8 @@ class PlanningSyncExecuter(SyncExecuter):
         self._fresh_planning = True
         self._fresh_perception = True
         self.motion_holds = {}
+        self.pm.environment_observation = None
+        self.pm.regulatory_observation = None
 
 
 class BehaviorStanleyController(StanleyController):

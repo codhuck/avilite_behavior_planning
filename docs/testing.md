@@ -12,7 +12,8 @@ ruff check .
 ruff format --check .
 ```
 
-The parent root directory lets pytest import the plugin's root `__init__.py`
+Pass `--rootdir=..` explicitly: pytest resolves the root before reading ini
+`addopts`. The parent root directory lets pytest import the plugin's root `__init__.py`
 correctly. These tests do not require CARLA or a display.
 
 The coordinator acceptance tests ship in this repository; they do not require
