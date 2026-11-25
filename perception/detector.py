@@ -35,6 +35,7 @@ ROOT = Path(__file__).resolve().parents[1]
 @dataclass
 class SensorObservation(RegulatoryObservation):
     source: str = "rgb_lidar"
+    origin: str = field(default="sensor", kw_only=True)
     crossings: dict = field(
         default_factory=dict
     )  # True occupied, False observed clear, None unknown
@@ -227,8 +228,10 @@ class SensorRegulatoryDetector(DetectionStrategy):
         try:
             observation = self.observe(perception_model, sensors)
         except Exception:
+            now = float(getattr(perception_model, "simulation_time", 0.0))
             observation = SensorObservation(
-                float(getattr(perception_model, "simulation_time", 0.0))
+                now if np.isfinite(now) and now >= 0 else 0.0,
+                diagnostics={"status": "perception_error"},
             )
             perception_model.regulatory_observation = observation
             perception_model.environment_observation = environment_observation(observation)
@@ -242,6 +245,8 @@ class SensorRegulatoryDetector(DetectionStrategy):
         if pm is None:
             raise ValueError("SensorRegulatoryDetector requires a perception model")
         now = float(getattr(pm, "simulation_time", 0.0))
+        if not np.isfinite(now) or now < 0:
+            raise ValueError("Runtime time must be finite and nonnegative")
         if self._last_now is not None and now < self._last_now:
             self.reset()
         self._last_now = now
@@ -287,23 +292,41 @@ class SensorRegulatoryDetector(DetectionStrategy):
             self.clear_since.clear()
             obs.diagnostics = {"status": contract_error}
             return obs
-        stamp = float(camera.stamp)
+        stamp = min(float(camera.stamp), float(lidar.stamp))
+        obs.sensor_stamp = stamp
         if self.last_stamp is not None and stamp <= self.last_stamp:
             # Never relabel an old image as a fresh observation or accumulate confirmations.
             self.green_streak.clear()
             self.clear_since.clear()
             obs.diagnostics = {"status": "repeated_or_out_of_order_frame"}
             return obs
-        self.last_stamp = stamp
-        obs.sensor_stamp = stamp
-        if self.clock_anchor is None:
-            self.clock_anchor = (stamp, now)
-        capture_time = self.clock_anchor[1] + stamp - self.clock_anchor[0]
-        if now - capture_time > PluginSettings.observation_max_age or capture_time - now > 0.005:
+        offset = PluginSettings.sensor_clock_offset
+        if offset is None:
+            assembled = getattr(sensors, "stamp", None)
+            if assembled is None or not np.isfinite(assembled) or assembled < 0:
+                self.green_streak.clear()
+                self.clear_since.clear()
+                obs.diagnostics = {"status": "missing_or_invalid_frame_clock"}
+                return obs
+            if max(camera.stamp, lidar.stamp) - assembled > 0.005:
+                self.green_streak.clear()
+                self.clear_since.clear()
+                obs.diagnostics = {"status": "capture_after_frame_assembly"}
+                return obs
+            if self.clock_anchor is None:
+                self.clock_anchor = (float(assembled), now)
+            offset = self.clock_anchor[1] - self.clock_anchor[0]
+        capture_time = stamp + offset
+        if (
+            capture_time < 0
+            or now - capture_time > PluginSettings.observation_max_age
+            or capture_time - now > 0.005
+        ):
             self.green_streak.clear()
             self.clear_since.clear()
             obs.diagnostics = {"status": "stale_or_future_frame", "capture_time": capture_time}
             return obs
+        self.last_stamp = stamp
         obs.time = min(
             now, capture_time
         )  # CARLA float32 tick rounding must not create future observations

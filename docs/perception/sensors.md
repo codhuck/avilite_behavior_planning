@@ -42,6 +42,16 @@ still uses simulator ego localization. This is sensor-driven dynamic perception,
 not a mapless or end-to-end autonomy system. STOP detections are recorded;
 the existing conservative mapped STOP rule is retained.
 
+## Timestamp and origin settings
+
+Sensor profiles require `required_observation_origin: sensor`. CARLA truth or
+untagged legacy observations cannot satisfy this policy. The detector preserves
+the oldest contributing acquisition time through inference. Configure
+`sensor_clock_offset` for a known sensor-to-runtime clock mapping; the default
+simulation anchor cannot detect an already delayed first assembled packet.
+See [the observation contract](../environment-observations.md#capture-time) for
+clock assumptions and the `id`/`map_ref` distinction.
+
 ## Earlier aperture-backend setup
 
 ```bash

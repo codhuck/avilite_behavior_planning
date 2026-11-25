@@ -29,7 +29,9 @@ def observe_carla(world, simulation_time):
     for actor in actors.filter("walker.pedestrian.*"):
         p = actor.get_location()
         pedestrians.append((p.x, -p.y))
-    return RegulatoryObservation(float(simulation_time), lights, pedestrians)
+    return RegulatoryObservation(
+        float(simulation_time), lights, pedestrians, source="carla", origin="simulator_truth"
+    )
 
 
 class CarlaRegulatoryTask(TaskStrategy):
@@ -60,7 +62,11 @@ class CarlaRegulatoryTask(TaskStrategy):
             return
         if self.use_ground_truth:
             if (
-                getattr(getattr(executer.pm, "regulatory_observation", None), "source", None)
+                getattr(getattr(executer.pm, "regulatory_observation", None), "origin", None)
+                == "sensor"
+                or getattr(getattr(executer.pm, "environment_observation", None), "origin", None)
+                == "sensor"
+                or getattr(getattr(executer.pm, "regulatory_observation", None), "source", None)
                 == "rgb_lidar"
             ):
                 raise RuntimeError(
@@ -106,9 +112,8 @@ class CarlaRegulatoryTask(TaskStrategy):
             behavior_tree_trace=json.dumps(getattr(plan, "behavior_tree_trace", [])),
             rule_id=plan.rule_id,
             rule_distance=plan.rule_distance,
-            observation_source=getattr(
-                executer.pm.regulatory_observation, "source", "ground_truth"
-            ),
+            observation_source=getattr(executer.pm.regulatory_observation, "source", "legacy"),
+            observation_origin=getattr(executer.pm.regulatory_observation, "origin", "unknown"),
             lights=json.dumps(getattr(executer.pm.regulatory_observation, "lights", {})),
             pedestrian_count=len(getattr(executer.pm.regulatory_observation, "pedestrians", [])),
         )

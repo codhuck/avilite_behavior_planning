@@ -252,11 +252,19 @@ class HDMapBehaviorPlanner(LocalBehavioralPlanningStrategy):
         plan.behavior_state, plan.behavior_reason = "CRUISE", "route_clear"
         plan.rule_id, plan.rule_distance, plan.speed_limit = None, None, None
         plan.decision_time = now
-        if hasattr(obs, "diagnostics") and (not fresh or obs.diagnostics.get("status") != "ok"):
+        required_origin = PluginSettings.required_observation_origin
+        origin_mismatch = (
+            required_origin != "any" and getattr(obs, "origin", "unknown") != required_origin
+        )
+        if origin_mismatch or (
+            hasattr(obs, "diagnostics") and (not fresh or obs.diagnostics.get("status") != "ok")
+        ):
             plan.behavior = LocalBehavior.STOP
             plan.behavior_state = "PERCEPTION_STOP"
-            plan.behavior_reason = "sensor_" + (
-                obs.diagnostics.get("status", "unknown") if fresh else "stale"
+            plan.behavior_reason = (
+                "observation_origin_" + getattr(obs, "origin", "unknown")
+                if origin_mismatch
+                else "sensor_" + (obs.diagnostics.get("status", "unknown") if fresh else "stale")
             )
             plan.rule_distance = 0.0
             plan.stop_feature_id = None

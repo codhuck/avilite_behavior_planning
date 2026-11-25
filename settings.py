@@ -1,5 +1,7 @@
 """Settings for the HD-map behavior planner plugin."""
 
+from typing import Literal
+
 from avlite.c60_apps.c64_settings_schema import SettingsSchema
 from pydantic import Field
 
@@ -115,8 +117,17 @@ class PluginSettingsSchema(SettingsSchema):
     pedestrian_margin: float = Field(
         default=1.5, ge=0, description="Crosswalk occupancy margin (m)."
     )
+    sensor_clock_offset: float | None = Field(
+        default=None,
+        allow_inf_nan=False,
+        description="Runtime time minus sensor time (s). None anchors the first frame assembly stamp to runtime; hardware should supply a calibrated offset.",
+    )
+    required_observation_origin: Literal["any", "sensor", "simulator_truth", "scenario"] = Field(
+        default="any",
+        description="Accepted regulatory evidence origin. Sensor profiles require sensor; any preserves legacy scenarios.",
+    )
     observation_max_age: float = Field(
-        default=0.3, gt=0, description="Maximum dynamic-observation age in simulation seconds."
+        default=0.3, gt=0, description="Maximum dynamic-observation age in executor-clock seconds."
     )
     telemetry_directory: str = Field(
         default="logs/hdmap", description="Per-run behavior telemetry and events directory."

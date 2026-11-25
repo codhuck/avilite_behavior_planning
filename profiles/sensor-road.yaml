@@ -171,6 +171,7 @@ c69_apps:
   c62_load_plugins: true
 plugins:
   avlite_behavior_hdmap:
+    required_observation_origin: sensor
     stop_lookahead: 50.0
     stop_buffer: 2.0
     stop_hold_time: 1.0
