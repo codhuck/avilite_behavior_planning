@@ -20,6 +20,10 @@
 
 ## Tests and experiments
 
+- [Reproducible road scenarios and replay](scenarios.md)
+- [Scenario API discussion proposal](proposals/scenario-api.md)
+- [Scenario validation results](validation/scenarios-20261126.md)
+
 - [Test commands and compatibility results](testing.md)
 - [24 November planning-plugin follow-up](validation/meeting-20261124.md)
 - [Main-branch verification](validation/main-20261125.md)

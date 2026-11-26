@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenDRIVE>
+  <header revMajor="1" revMinor="4" name="AVLite coordinator straight-road fixture" version="1" date="2026-11-18" north="10" south="-10" east="120" west="0"/>
+  <road name="Coordinator demo" length="120" id="1" junction="-1">
+    <link/>
+    <planView><geometry s="0" x="0" y="0" hdg="0" length="120"><line/></geometry></planView>
+    <elevationProfile><elevation s="0" a="0" b="0" c="0" d="0"/></elevationProfile>
+    <lateralProfile/>
+    <lanes><laneOffset s="0" a="0" b="0" c="0" d="0"/>
+      <laneSection s="0">
+        <center><lane id="0" type="none" level="false"><roadMark sOffset="0" type="solid" weight="standard" color="standard" width="0.15"/></lane></center>
+        <right><lane id="-1" type="driving" level="false"><link/><width sOffset="0" a="3.5" b="0" c="0" d="0"/><roadMark sOffset="0" type="solid" weight="standard" color="standard" width="0.15"/></lane></right>
+      </laneSection>
+    </lanes><objects><object id="crossing" name="crosswalk" type="crosswalk" s="48" t="-1.75" length="4" width="7"/></objects>
+    <signals><signal id="light" name="traffic light" s="30" t="-1.75" dynamic="yes" orientation="+" type="1000001" subtype="0"><validity fromLane="-1" toLane="-1"/></signal></signals>
+  </road>
+</OpenDRIVE>

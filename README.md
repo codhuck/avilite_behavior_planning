@@ -77,6 +77,19 @@ Sensor results use an optional [environment observation contract](docs/environme
 Road planners check for signal/crossing capabilities; generic object detection
 alone is insufficient. The shared-core interface remains a proposal.
 
+## Scenario tests
+
+Run a reproducible road case through the AVLite stack:
+
+```bash
+python tools/run_scenarios.py run data/scenarios/light-and-crossing.yaml \
+  --seed 0 --output logs/scenario-one
+```
+
+The report includes physical checks, saved inputs and a replay command. Seeded
+variants and comparisons are described in [scenario tests](docs/scenarios.md).
+These BasicSim cases use explicitly scripted observations, not camera inference.
+
 ## Sensors and parking
 
 For camera/LiDAR perception, run `python install.py` to install and check the

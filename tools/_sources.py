@@ -9,6 +9,7 @@ def source_files(root):
     files = list(root.glob("*.py"))
     for directory in (
         "planning",
+        "scenarios",
         "parking",
         "perception",
         "execution",

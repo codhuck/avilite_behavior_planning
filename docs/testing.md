@@ -57,6 +57,17 @@ Use the same `AVLITE_CONFIG_DIR` for both commands if you override the default.
 The checker verifies the loaded plugin path, runs 60 ticks and checks that the
 vehicle moves. The CI workflow runs these checks against a pinned core revision.
 
+## Declarative scenario checks
+
+```bash
+python tools/run_scenarios.py suite data/scenarios/light-and-crossing.yaml \
+  data/scenarios/delayed-observations.yaml --seeds 0 1 \
+  --strategies road-rules road-tree --output logs/scenario-suite
+```
+
+Use [scenario tests](scenarios.md) for replay, the intentionally blocked negative
+case, observation fault semantics and adapter limitations.
+
 ## Package layout check — 20 November 2026
 
 The reorganized package was checked against the same unmodified AVLite core.

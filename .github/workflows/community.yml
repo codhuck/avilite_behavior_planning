@@ -33,6 +33,10 @@ jobs:
           python tools/prepare_coordinator_profile.py --mode race --output /tmp/avlite-community-check/race.yaml
           python tools/check_coordinator_profile.py --profile road --output logs/road-factory.json
           python tools/check_coordinator_profile.py --profile race --output logs/race-factory.json
+      - name: Declarative road scenarios
+        run: |
+          python tools/run_scenarios.py suite data/scenarios/light-and-crossing.yaml data/scenarios/delayed-observations.yaml --seeds 0 --strategies road-rules road-tree --output logs/scenarios
+          python tools/run_scenarios.py replay logs/scenarios/000-light-and-crossing-road-rules-seed0/manifest.json --output logs/scenario-replay
       - name: Parking scenarios
         run: python tools/check_parking.py --output logs/parking
       - name: Drive-to-parking missions

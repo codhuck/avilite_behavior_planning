@@ -1,0 +1,12 @@
+version: 1
+name: blocked-crossing
+map: urban.xodr
+route: urban-route.json
+duration: 45
+actors:
+  - {id: pedestrian, kind: pedestrian, x: 48, y: -1.75, length: 0.6, width: 0.6}
+signals:
+  - {id: light, initial: Green}
+criteria:
+  require_completion: true
+  max_stopped_seconds: 20
